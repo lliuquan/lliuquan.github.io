@@ -5,21 +5,21 @@
   
   <title>Object源码剖析（顺带分析了notify/wait） | Whits&#39;s Blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="本文主要讲解了 JDK 下的Object的部分源码，以及涉及到的wait和notify的一些相关知识点，本文参考资料见文末">
+  <meta name="description" content="本文主要讲解了 JDK 下的Object的部分源码，以及涉及到的wait和notify的一些相关知识点，例如：对象锁与锁池和等待池，如何正确使用wait和notify，以及延伸出来的生产者与消费者问题，最后还有一些参考代码，本文参考资料见文末">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Object源码剖析（顺带分析了notify&#x2F;wait）">
 <meta property="og:url" content="http://yoursite.com/2019/03/15/Object源码剖析/index.html">
 <meta property="og:site_name" content="Whits&#39;s Blog">
-<meta property="og:description" content="本文主要讲解了 JDK 下的Object的部分源码，以及涉及到的wait和notify的一些相关知识点，本文参考资料见文末">
+<meta property="og:description" content="本文主要讲解了 JDK 下的Object的部分源码，以及涉及到的wait和notify的一些相关知识点，例如：对象锁与锁池和等待池，如何正确使用wait和notify，以及延伸出来的生产者与消费者问题，最后还有一些参考代码，本文参考资料见文末">
 <meta property="og:locale" content="zh-Hans">
 <meta property="og:image" content="d:/blogPicter/Object/waitPool.png">
 <meta property="og:image" content="c:/Users/liuquan/AppData/Roaming/Typora/typora-user-images/1553868352042.png">
 <meta property="og:image" content="c:/Users/liuquan/AppData/Roaming/Typora/typora-user-images/1553866873107.png">
 <meta property="og:image" content="c:/Users/liuquan/AppData/Roaming/Typora/typora-user-images/1553867566020.png">
-<meta property="og:updated_time" content="2019-05-05T12:41:16.316Z">
+<meta property="og:updated_time" content="2019-05-07T12:22:11.130Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Object源码剖析（顺带分析了notify&#x2F;wait）">
-<meta name="twitter:description" content="本文主要讲解了 JDK 下的Object的部分源码，以及涉及到的wait和notify的一些相关知识点，本文参考资料见文末">
+<meta name="twitter:description" content="本文主要讲解了 JDK 下的Object的部分源码，以及涉及到的wait和notify的一些相关知识点，例如：对象锁与锁池和等待池，如何正确使用wait和notify，以及延伸出来的生产者与消费者问题，最后还有一些参考代码，本文参考资料见文末">
 <meta name="twitter:image" content="d:/blogPicter/Object/waitPool.png">
   
     <link rel="alternative" href="/atom.xml" title="Whits&#39;s Blog" type="application/atom+xml">
@@ -238,7 +238,7 @@
   
     <div class="article-meta">
       <a href="/2019/03/15/Object源码剖析/" class="article-date">
-      <time datetime="2019-03-14T16:00:00.000Z" itemprop="datePublished">2019-03-15</time>
+      <time datetime="2019-03-15T00:00:00.000Z" itemprop="datePublished">2019-03-15</time>
 </a>
     </div>
   
@@ -270,7 +270,7 @@
           
         <excerpt in index | 首页摘要> 
 
-<p>本文主要讲解了 JDK 下的Object的部分源码，以及涉及到的wait和notify的一些相关知识点，本文参考资料见文末</p>
+<p>本文主要讲解了 JDK 下的Object的部分源码，以及涉及到的wait和notify的一些相关知识点，例如：<strong>对象锁与锁池和等待池</strong>，<strong>如何正确使用wait和notify</strong>，以及延伸出来的<strong>生产者与消费者问题</strong>，最后还有一些<strong>参考代码</strong>，本文参考资料见文末</p>
 <a id="more"></a>
 <the rest of contents | 余下全文>
 
@@ -596,7 +596,15 @@
 <li><p>[ ] 三. Object里面的finalize方法补充完全——只需要参考</p>
 </li>
 </ul>
-<h3 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h3></the></excerpt>
+<h4 id="六-参考资料"><a href="#六-参考资料" class="headerlink" title="六.参考资料"></a>六.参考资料</h4><p><a href="https://blog.csdn.net/u014561933/article/details/58639411" target="_blank" rel="noopener">https://blog.csdn.net/u014561933/article/details/58639411</a>             <a href="https://blog.csdn.net/u014561933/article/details/58639411" title="sleep()和wait()方法与对象锁、锁池" target="_blank" rel="noopener">我就是小在</a></p>
+<p><a href="https://blog.csdn.net/qq_38182963/article/details/78948024" target="_blank" rel="noopener">https://blog.csdn.net/qq_38182963/article/details/78948024</a>       <a href="https://blog.csdn.net/qq_38182963/article/details/78948024" title="并发编程之 wait notify 方法剖析" target="_blank" rel="noopener">stateiso</a></p>
+<p><a href="https://www.cnblogs.com/hy928302776/p/3255641.html" target="_blank" rel="noopener">https://www.cnblogs.com/hy928302776/p/3255641.html</a>             <a href="https://www.cnblogs.com/hy928302776/p/3255641.html" title="什么时候释放锁" target="_blank" rel="noopener">世界之大追梦者</a></p>
+<p><a href="https://blog.csdn.net/lengxiao1993/article/details/52296220" target="_blank" rel="noopener">https://blog.csdn.net/lengxiao1993/article/details/52296220</a>       <a href="https://blog.csdn.net/lengxiao1993/article/details/52296220" title=" 搭配synchonized关键字使用" target="_blank" rel="noopener">萧萧冷</a></p>
+<p><a href="https://blog.csdn.net/perrywork/article/details/16819153" target="_blank" rel="noopener">https://blog.csdn.net/perrywork/article/details/16819153</a>         <a href="https://blog.csdn.net/perrywork/article/details/16819153" title="3个线程依次轮流打印出75个数" target="_blank" rel="noopener">zhao_perry</a></p>
+<p><a href="https://www.linuxidc.com/Linux/2014-03/98715.htm" target="_blank" rel="noopener">https://www.linuxidc.com/Linux/2014-03/98715.htm</a>              <a href="https://www.linuxidc.com/Linux/2014-03/98715.htm" title="一道阿里面试题的分析与应对" target="_blank" rel="noopener">blueheart20</a></p>
+<p><a href="https://blog.csdn.net/yiifaa/article/details/76341707" target="_blank" rel="noopener">https://blog.csdn.net/yiifaa/article/details/76341707</a>               <a href="https://blog.csdn.net/yiifaa/article/details/76341707" title="为什么wait()一定要放在循环中" target="_blank" rel="noopener">蚁方阵</a></p>
+<p><a href="https://blog.csdn.net/qq_35181209/article/details/77362297" target="_blank" rel="noopener">https://blog.csdn.net/qq_35181209/article/details/77362297</a>        <a href="https://blog.csdn.net/qq_35181209/article/details/77362297" title="wait放在while循环里面的原因探析" target="_blank" rel="noopener">菜鸡小王子</a></p>
+</the></excerpt>
       
       
         <div class="page-reward">
@@ -653,8 +661,8 @@
     <div class="copyright">
         <p><span>本文标题:</span><a href="/2019/03/15/Object源码剖析/">Object源码剖析（顺带分析了notify/wait）</a></p>
         <p><span>文章作者:</span><a href="/" title="访问 Whits 的个人博客">Whits</a></p>
-        <p><span>发布时间:</span>2019年03月15日 - 00时00分</p>
-        <p><span>最后更新:</span>2019年05月05日 - 20时41分</p>
+        <p><span>发布时间:</span>2019年03月15日 - 08时00分</p>
+        <p><span>最后更新:</span>2019年05月07日 - 20时22分</p>
         <p>
             <span>原始链接:</span><a class="post-url" href="/2019/03/15/Object源码剖析/" title="Object源码剖析（顺带分析了notify/wait）">http://yoursite.com/2019/03/15/Object源码剖析/</a>
             <span class="copy-path" data-clipboard-text="原文: http://yoursite.com/2019/03/15/Object源码剖析/　　作者: Whits" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
@@ -670,7 +678,7 @@
 
 <nav id="article-nav">
   
-    <a href="/2019/05/05/Java运行期优化/" id="article-nav-newer" class="article-nav-link-wrap">
+    <a href="/2019/05/05/Java运行期优化(一)/" id="article-nav-newer" class="article-nav-link-wrap">
       <strong class="article-nav-caption"><</strong>
       <div class="article-nav-title">
         
@@ -687,8 +695,8 @@
 
     <div id="toc" class="toc-article">
     <strong class="toc-title">文章目录</strong>
-    <ol class="toc"><li class="toc-item toc-level-4"><a class="toc-link" href="#一-等待-唤醒机制的常见用法"><span class="toc-number">1.</span> <span class="toc-text">一. 等待/唤醒机制的常见用法</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#二-Object里面的wait与notify方法"><span class="toc-number">2.</span> <span class="toc-text">二. Object里面的wait与notify方法</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#1-监视器，对象锁，锁池与等待池"><span class="toc-number">2.1.</span> <span class="toc-text">(1).监视器，对象锁，锁池与等待池</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#2-注意事项"><span class="toc-number">2.2.</span> <span class="toc-text">(2).注意事项</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#3-工作流程"><span class="toc-number">2.3.</span> <span class="toc-text">(3).工作流程</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#4-什么时候释放对象锁？"><span class="toc-number">2.4.</span> <span class="toc-text">(4).什么时候释放对象锁？</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#5-在synchronized中才能使用wait与notify方法"><span class="toc-number">2.5.</span> <span class="toc-text">(5).在synchronized中才能使用wait与notify方法?</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#6-如何正确地使用唤醒等待机制？——-effective-java"><span class="toc-number">2.6.</span> <span class="toc-text">(6).如何正确地使用唤醒等待机制？—— effective java</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#7-为什么一定要while判断，不能用if"><span class="toc-number">2.7.</span> <span class="toc-text">(7).为什么一定要while判断，不能用if</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#8-notify-和-notifyAll-的一段代码分析"><span class="toc-number">2.8.</span> <span class="toc-text">(8).notify 和 notifyAll 的一段代码分析</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#9-延伸出来的生产者与消费者问题"><span class="toc-number">2.9.</span> <span class="toc-text">(9).延伸出来的生产者与消费者问题</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#三-Object里面的finalize方法"><span class="toc-number">3.</span> <span class="toc-text">三. Object里面的finalize方法</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#四-参考代码"><span class="toc-number">4.</span> <span class="toc-text">四. 参考代码</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#（1）线程相互通信，这是一个有缺点的案例，使用wait前，最好需要加上while循环"><span class="toc-number">4.1.</span> <span class="toc-text">（1）线程相互通信，这是一个有缺点的案例，使用wait前，最好需要加上while循环</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#（2）notify使用不当造成死锁"><span class="toc-number">4.2.</span> <span class="toc-text">（2）notify使用不当造成死锁</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#（3）虚假唤醒（原文章已经过修改-参考链接见下方）"><span class="toc-number">4.3.</span> <span class="toc-text">（3）虚假唤醒（原文章已经过修改,参考链接见下方）</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#（4）三个线程轮流打印1-100（一道常见的面试题）"><span class="toc-number">4.4.</span> <span class="toc-text">（4）三个线程轮流打印1-100（一道常见的面试题）</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#（5）-按照顺序去打印数字"><span class="toc-number">4.5.</span> <span class="toc-text">（5） 按照顺序去打印数字</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#（6）一些值得去看的代码，下面给出一些链接"><span class="toc-number">4.6.</span> <span class="toc-text">（6）一些值得去看的代码，下面给出一些链接</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#五-存在的疑问与不足"><span class="toc-number">5.</span> <span class="toc-text">五.存在的疑问与不足</span></a></li></ol><li class="toc-item toc-level-3"><a class="toc-link" href="#参考资料"><span class="toc-number"></span> <span class="toc-text">参考资料</span></a>
-</li></div>
+    <ol class="toc"><li class="toc-item toc-level-4"><a class="toc-link" href="#一-等待-唤醒机制的常见用法"><span class="toc-number">1.</span> <span class="toc-text">一. 等待/唤醒机制的常见用法</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#二-Object里面的wait与notify方法"><span class="toc-number">2.</span> <span class="toc-text">二. Object里面的wait与notify方法</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#1-监视器，对象锁，锁池与等待池"><span class="toc-number">2.1.</span> <span class="toc-text">(1).监视器，对象锁，锁池与等待池</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#2-注意事项"><span class="toc-number">2.2.</span> <span class="toc-text">(2).注意事项</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#3-工作流程"><span class="toc-number">2.3.</span> <span class="toc-text">(3).工作流程</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#4-什么时候释放对象锁？"><span class="toc-number">2.4.</span> <span class="toc-text">(4).什么时候释放对象锁？</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#5-在synchronized中才能使用wait与notify方法"><span class="toc-number">2.5.</span> <span class="toc-text">(5).在synchronized中才能使用wait与notify方法?</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#6-如何正确地使用唤醒等待机制？——-effective-java"><span class="toc-number">2.6.</span> <span class="toc-text">(6).如何正确地使用唤醒等待机制？—— effective java</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#7-为什么一定要while判断，不能用if"><span class="toc-number">2.7.</span> <span class="toc-text">(7).为什么一定要while判断，不能用if</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#8-notify-和-notifyAll-的一段代码分析"><span class="toc-number">2.8.</span> <span class="toc-text">(8).notify 和 notifyAll 的一段代码分析</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#9-延伸出来的生产者与消费者问题"><span class="toc-number">2.9.</span> <span class="toc-text">(9).延伸出来的生产者与消费者问题</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#三-Object里面的finalize方法"><span class="toc-number">3.</span> <span class="toc-text">三. Object里面的finalize方法</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#四-参考代码"><span class="toc-number">4.</span> <span class="toc-text">四. 参考代码</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#（1）线程相互通信，这是一个有缺点的案例，使用wait前，最好需要加上while循环"><span class="toc-number">4.1.</span> <span class="toc-text">（1）线程相互通信，这是一个有缺点的案例，使用wait前，最好需要加上while循环</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#（2）notify使用不当造成死锁"><span class="toc-number">4.2.</span> <span class="toc-text">（2）notify使用不当造成死锁</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#（3）虚假唤醒（原文章已经过修改-参考链接见下方）"><span class="toc-number">4.3.</span> <span class="toc-text">（3）虚假唤醒（原文章已经过修改,参考链接见下方）</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#（4）三个线程轮流打印1-100（一道常见的面试题）"><span class="toc-number">4.4.</span> <span class="toc-text">（4）三个线程轮流打印1-100（一道常见的面试题）</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#（5）-按照顺序去打印数字"><span class="toc-number">4.5.</span> <span class="toc-text">（5） 按照顺序去打印数字</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#（6）一些值得去看的代码，下面给出一些链接"><span class="toc-number">4.6.</span> <span class="toc-text">（6）一些值得去看的代码，下面给出一些链接</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#五-存在的疑问与不足"><span class="toc-number">5.</span> <span class="toc-text">五.存在的疑问与不足</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#六-参考资料"><span class="toc-number">6.</span> <span class="toc-text">六.参考资料</span></a></li></ol>
+</div>
 <input type="button" id="tocButton" value="隐藏目录" title="点击按钮隐藏或者显示文章目录">
 
 <script src="https://7.url.cn/edu/jslib/comb/require-2.1.6,jquery-1.9.1.min.js"></script>
@@ -753,7 +761,7 @@
 
     <div class="scroll" id="post-nav-button">
         
-            <a href="/2019/05/05/Java运行期优化/" title="上一篇: ">
+            <a href="/2019/05/05/Java运行期优化(一)/" title="上一篇: ">
                 <i class="fa fa-angle-left"></i>
             </a>
         
@@ -762,7 +770,7 @@
             <a href="/" title="回到主页"><i class="fa fa-home"></i></a>
         
     </div>
-    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019/05/05/String源码剖析/">String源码剖析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/05/Java运行期优化/">Java运行期优化</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/15/Object源码剖析/">Object源码剖析（顺带分析了notify/wait）</a></li></ul>
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019/05/05/String源码剖析/">String源码剖析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/05/Java运行期优化(一)/">Java运行期优化(一)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/15/Object源码剖析/">Object源码剖析（顺带分析了notify/wait）</a></li></ul>
     <script src="https://7.url.cn/edu/jslib/comb/require-2.1.6,jquery-1.9.1.min.js"></script>
     <script>
         $(".post-list").addClass("toc-article");
