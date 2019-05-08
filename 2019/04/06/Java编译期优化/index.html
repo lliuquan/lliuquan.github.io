@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="utf-8">
+  
+  <title>Java早期(编译期)优化 | Whits&#39;s Blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="本文主要讲解了Java代码在编译的一些情况分类（Javac ，JIT ，AOT）和 解析与填充符号表，注解的处理，语义分析和字节码的生成，解语法糖，本文参考资料见文末">
+<meta name="keywords" content="编译期,JVM">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java早期(编译期)优化">
+<meta property="og:url" content="http://yoursite.com/2019/04/06/Java编译期优化/index.html">
+<meta property="og:site_name" content="Whits&#39;s Blog">
+<meta property="og:description" content="本文主要讲解了Java代码在编译的一些情况分类（Javac ，JIT ，AOT）和 解析与填充符号表，注解的处理，语义分析和字节码的生成，解语法糖，本文参考资料见文末">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="c:/Users/liuquan/AppData/Roaming/Typora/typora-user-images/1556973303021.png">
+<meta property="og:updated_time" content="2019-05-08T09:17:25.625Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Java早期(编译期)优化">
+<meta name="twitter:description" content="本文主要讲解了Java代码在编译的一些情况分类（Javac ，JIT ，AOT）和 解析与填充符号表，注解的处理，语义分析和字节码的生成，解语法糖，本文参考资料见文末">
+<meta name="twitter:image" content="c:/Users/liuquan/AppData/Roaming/Typora/typora-user-images/1556973303021.png">
+  
+    <link rel="alternative" href="/atom.xml" title="Whits&#39;s Blog" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/img/favicon.png">
+  
+  
+      <link rel="stylesheet" href="//cdn.bootcss.com/animate.css/3.5.0/animate.min.css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/font-awesome/css/font-awesome.min.css">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  
+  
+      <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  
+  <!-- 加载特效 -->
+    <script src="/js/pace.js"></script>
+    <link href="/css/pace/pace-theme-flash.css" rel="stylesheet">
+  <script>
+      var yiliaConfig = {
+          rootUrl: '/',
+          fancybox: true,
+          animate: true,
+          isHome: false,
+          isPost: true,
+          isArchive: false,
+          isTag: false,
+          isCategory: false,
+          open_in_new: false
+      }
+  </script>
+</head></html>
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+    <header id="header" class="inner">
+        <a href="/" class="profilepic">
+            
+            <img lazy-src="/img/head.jpg" class="js-avatar">
+            
+        </a>
+
+        <hgroup>
+          <h1 class="header-author"><a href="/" title="Hi Mate">Whits</a></h1>
+        </hgroup>
+
+        
+        <p class="header-subtitle">just do it</p>
+        
+        
+        
+            <div id="switch-btn" class="switch-btn">
+                <div class="icon">
+                    <div class="icon-ctn">
+                        <div class="icon-wrap icon-house" data-idx="0">
+                            <div class="birdhouse"></div>
+                            <div class="birdhouse_holes"></div>
+                        </div>
+                        <div class="icon-wrap icon-ribbon hide" data-idx="1">
+                            <div class="ribbon"></div>
+                        </div>
+                        
+                        <div class="icon-wrap icon-link hide" data-idx="2">
+                            <div class="loopback_l"></div>
+                            <div class="loopback_r"></div>
+                        </div>
+                        
+                        
+                        <div class="icon-wrap icon-me hide" data-idx="3">
+                            <div class="user"></div>
+                            <div class="shoulder"></div>
+                        </div>
+                        
+                    </div>
+                    
+                </div>
+                <div class="tips-box hide">
+                    <div class="tips-arrow"></div>
+                    <ul class="tips-inner">
+                        <li>菜单</li>
+                        <li>标签</li>
+                        
+                        <li>友情链接</li>
+                        
+                        
+                        <li>关于我</li>
+                        
+                    </ul>
+                </div>
+            </div>
+        
+
+        <div id="switch-area" class="switch-area">
+            <div class="switch-wrap">
+                <section class="switch-part switch-part1">
+                    <nav class="header-menu">
+                        <ul>
+                        
+                            <li><a href="/works">作品展示</a></li>
+                        
+                            <li><a href="/tags">标签</a></li>
+                        
+                            <li><a href="/categories">分类</a></li>
+                        
+                        </ul>
+                    </nav>
+                    <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fl mail" target="_blank" href="mailto:780101896@qq.com" title="mail">mail</a>
+                            
+                                <a class="fl github" target="_blank" href="https://github.com/lliuquan" title="github">github</a>
+                            
+                                <a class="fl zhihu" target="_blank" href="https://www.zhihu.com/people/liu-quan-7-71/activities" title="zhihu">zhihu</a>
+                            
+                        </ul>
+                    </nav>
+                </section>
+                
+                
+                <section class="switch-part switch-part2">
+                    <div class="widget tagcloud" id="js-tagcloud">
+                        <a href="/tags/B-树/" style="font-size: 15px;">B+树</a> <a href="/tags/JVM/" style="font-size: 20px;">JVM</a> <a href="/tags/Object/" style="font-size: 10px;">Object</a> <a href="/tags/String/" style="font-size: 10px;">String</a> <a href="/tags/Wait-Notify/" style="font-size: 10px;">Wait/Notify</a> <a href="/tags/源码/" style="font-size: 15px;">源码</a> <a href="/tags/索引/" style="font-size: 15px;">索引</a> <a href="/tags/编译期/" style="font-size: 10px;">编译期</a> <a href="/tags/运行期/" style="font-size: 15px;">运行期</a>
+                    </div>
+                </section>
+                
+                
+                
+                <section class="switch-part switch-part3">
+                    <div id="js-friends">
+                    
+                      <a target="_blank" class="main-nav-link switch-friends-link" href="https://www.v2ex.com/">V2ex</a>
+                    
+                      <a target="_blank" class="main-nav-link switch-friends-link" href="https://segmentfault.com/">Segmentfault</a>
+                    
+                      <a target="_blank" class="main-nav-link switch-friends-link" href="https://stackoverflow.com/">Stackoverflow</a>
+                    
+                      <a target="_blank" class="main-nav-link switch-friends-link" href="https://www.hollischuang.com/">Hollis</a>
+                    
+                      <a target="_blank" class="main-nav-link switch-friends-link" href="http://www.iocoder.cn/?csdn">芋道源码</a>
+                    
+                      <a target="_blank" class="main-nav-link switch-friends-link" href="https://www.nowcoder.com/5810854">牛客</a>
+                    
+                      <a target="_blank" class="main-nav-link switch-friends-link" href="http://ifeve.com/">并发编程网</a>
+                    
+                      <a target="_blank" class="main-nav-link switch-friends-link" href="https://wx.zsxq.com/dweb/#/login">知识星球</a>
+                    
+                    </div>
+                </section>
+                
+
+                
+                
+                <section class="switch-part switch-part4">
+                
+                    <div id="js-aboutme">NBA、半个历史爱好者、编程学习者、运动爱好者、在校学生</div>
+                </section>
+                
+            </div>
+        </div>
+    </header>                
+</div>
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+      <div class="overlay">
+          <div class="slider-trigger"></div>
+          <h1 class="header-author js-mobile-header hide"><a href="/" title="Me">Whits</a></h1>
+      </div>
+    <div class="intrude-less">
+        <header id="header" class="inner">
+            <a href="/" class="profilepic">
+                
+                    <img lazy-src="/img/head.jpg" class="js-avatar">
+                
+            </a>
+            <hgroup>
+              <h1 class="header-author"><a href="/" title="Me">Whits</a></h1>
+            </hgroup>
+            
+            <p class="header-subtitle">just do it</p>
+            
+            <nav class="header-menu">
+                <ul>
+                
+                    <li><a href="/works">作品展示</a></li>
+                
+                    <li><a href="/tags">标签</a></li>
+                
+                    <li><a href="/categories">分类</a></li>
+                
+                <div class="clearfix"></div>
+                </ul>
+            </nav>
+            <nav class="header-nav">
+                <div class="social">
+                    
+                        <a class="mail" target="_blank" href="mailto:780101896@qq.com" title="mail">mail</a>
+                    
+                        <a class="github" target="_blank" href="https://github.com/lliuquan" title="github">github</a>
+                    
+                        <a class="zhihu" target="_blank" href="https://www.zhihu.com/people/liu-quan-7-71/activities" title="zhihu">zhihu</a>
+                    
+                </div>
+            </nav>
+        </header>                
+    </div>
+</nav>
+      <div class="body-wrap"><article id="post-Java编译期优化" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2019/04/06/Java编译期优化/" class="article-date">
+      <time datetime="2019-04-06T08:05:36.000Z" itemprop="datePublished">2019-04-06</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Java早期(编译期)优化
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+    <div class="article-category tagcloud">
+    <a class="article-category-link" href="/categories/Java虚拟机/">Java虚拟机</a>
+    </div>
+
+
+        
+    <div class="article-tag tagcloud">
+        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/JVM/">JVM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/编译期/">编译期</a></li></ul>
+    </div>
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          
+        <excerpt in index | 首页摘要> 
+
+<p>本文主要讲解了Java代码在编译的一些情况分类<strong>（Javac ，JIT ，AOT</strong>）和 <strong>解析与填充符号表</strong>，<strong>注解的处理</strong>，语义<strong>分析和字节码的生成</strong>，<strong>解语法糖</strong>，本文参考资料见文末</p>
+<a id="more"></a>
+<the rest of contents | 余下全文>
+
+<h3 id="一-Java编译的三种情况"><a href="#一-Java编译的三种情况" class="headerlink" title="一.Java编译的三种情况"></a>一.Java编译的三种情况</h3><ol>
+<li><p>可能是指一个<strong>前端编译器</strong>把.java文件转变为.class文件的过程</p>
+</li>
+<li><p>可能是<strong>虚拟机的后端运行期编译器</strong>（JIT编译器，即时编译器）把字节码转变为机器码的过程</p>
+</li>
+<li><p>还可能是使用<strong>静态提前编译器</strong>（AOT编译器）直接把.java文件编译为本地机器代码的过程</p>
+</li>
+</ol>
+<p>在本文中我们讨论的是第一种编译方式，Javac这类编译器（也就是第一种的情况）对代码的运行效率几乎没人任何的优化措施。</p>
+<p>虚拟机的设计团队把<strong>性能的优化集中到了后端的即时编译器中</strong>，这样可以让不是javac产生的class文件同样也能享受编译器优化所带来的好处。</p>
+<p>但是javac做了许多针对Java语言编码过程的优化措施来改善程序员的编码风格，相当的Java语言新特性都是通过编译器“语法”来实现的，而不是通过虚拟机的底层来实现的。</p>
+<p><strong>即时编译器在运行期间的优化过程对程序运行更加重要，而前端编译器在编译器的优化过程对于程序编码来说关系更加密切。</strong></p>
+<h3 id="二-Javac的编译过程"><a href="#二-Javac的编译过程" class="headerlink" title="二.Javac的编译过程"></a>二.Javac的编译过程</h3><ol>
+<li><p>解析与填充符号表的过程</p>
+</li>
+<li><p>插入式注解处理器的注解处理过程</p>
+</li>
+<li><p>分析与字节码生成过程</p>
+<p><img src="C:\Users\liuquan\AppData\Roaming\Typora\typora-user-images\1556973303021.png" alt="1556973303021"></p>
+</li>
+</ol>
+<h4 id="编译过程一：解析与填充符号表"><a href="#编译过程一：解析与填充符号表" class="headerlink" title="编译过程一：解析与填充符号表"></a><strong>编译过程一：解析与填充符号表</strong></h4><p>解析过程包括了<strong>词法分析和语法分析这两个过程。</strong></p>
+<h5 id="词法分析："><a href="#词法分析：" class="headerlink" title="词法分析："></a><strong>词法分析</strong>：</h5><p>将源代码的字符流转变为标记（Token）集合，单个字符是程序编写过程的最小元素，标记是编译过程的最小元素，关键字，变量名，字面量都可以成为标记。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> a =  b + <span class="number">2</span>;</span><br></pre></td></tr></table></figure>
+<p>上面的代码包含了6个标记，分别是 int ，a , = , b , + , 2 。</p>
+<h5 id="语法分析："><a href="#语法分析：" class="headerlink" title="语法分析："></a><strong>语法分析</strong>：</h5><p>根据Token序列构造抽象语法分析树的过程，抽象语法分析树（AST）是描述程序代码语法结构的树形表示方式，语法树的每一个节点都代表着程序的语法结构。<strong>就此之后编译器基本不会对源码文件进行操作了，后续的操作都是建立在抽象语法树之上！</strong></p>
+<h5 id="填充符号表："><a href="#填充符号表：" class="headerlink" title="填充符号表："></a><strong>填充符号表</strong>：</h5><p>符号表（Symbol Table）是由一组符号地址和符号信息构成的表格，读者可以把它想象成哈希表中K-V值对的形式（实际上符号表不一定是哈希表实现，可以是有序符号表、树状符号表、栈结构符号表等）。</p>
+<p>符号表中所登记的信息在编译的不同阶段都要用到。                                  </p>
+<p> <strong>在语义分析中，符号表所登记的内容将用于语义检查（如检查一个名字的使用和原先的说明是否一致）和产生中间代码。                                                                                                                                                                                      在目标生成阶段，当对符号名进行地址分配时，符号表是地址分配的依据。</strong></p>
+<hr>
+<h4 id="编译过程二：注解处理（修改AST抽象语法树）"><a href="#编译过程二：注解处理（修改AST抽象语法树）" class="headerlink" title="编译过程二：注解处理（修改AST抽象语法树）"></a><strong>编译过程二：注解处理</strong>（修改AST抽象语法树）</h4><p>在JDK 1.5之后,Java语言提供了对注解(Annotation ) 的支持,这些注解与普通的Java代码一样,是在运行期间发挥作用的。</p>
+<p>在JDK 1.6中实现了JSR-269规范 ,提供了一组插入式注解处理器的标准API<strong>在编译期间对注解进行处理,我们可以把它看做是一组编译器的插件 ,在这些插件里面,可以读取、修改、添加抽象语法树中的任意元素。</strong></p>
+<p><strong>如果这些插件在处理注解期间对语法树进行了修改,编译器将回到解析及填充符号表的过程重新处理,直到所有插入式注解处理器都没有再对语法树进行修改为止,每一次循环称为一个Round</strong>,也就是图10-4中的回环过程。</p>
+<p>有了编译器注解处理的标准API后 ,我们的代码才有可能干涉编译器的行为,由于语法树中的任意元素,甚至包括代码注释都可以在插件之中访问到,所以通过插入式注解处理器实现的插件在功能上有很大的发挥空间。</p>
+<hr>
+<h4 id="编译过程三-语义分析和字节码生成"><a href="#编译过程三-语义分析和字节码生成" class="headerlink" title="编译过程三: 语义分析和字节码生成"></a>编译过程三: 语义分析和字节码生成</h4><p>语法分析之后,编译器获得了程序代码的抽象语法树表示,语法树能表示一个结构正确的源程序的抽象,<strong>但无法保证源程序是符合逻辑的。</strong></p>
+<p><strong>而语义分析的主要任务是对结构上正确的源程序进行上下文有关性质的审查,如进行类型审查。</strong>举个例子,假设有如下的3个变量定义语句:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> a = <span class="number">1</span>;</span><br><span class="line"><span class="keyword">boolean</span> b = <span class="keyword">false</span>;</span><br><span class="line"><span class="keyword">char</span> c = <span class="number">2</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">//后续可能出现的赋值运算，运行环境是java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">int</span> d = a + c;		<span class="comment">//只有这一种编译正确</span></span><br><span class="line"><span class="keyword">int</span> d = b + c;		<span class="comment">//编译出错</span></span><br><span class="line"><span class="keyword">char</span> d = a + c;		<span class="comment">//编译出错</span></span><br></pre></td></tr></table></figure>
+<p>语义分析的过程分为<strong>标注检查和数据及控制流分析</strong></p>
+<hr>
+<h5 id="一-标注检查步骤检查的内容"><a href="#一-标注检查步骤检查的内容" class="headerlink" title="一.标注检查步骤检查的内容"></a><strong>一.标注检查步骤检查的内容</strong></h5><ol>
+<li>变量使用前是否已被声明</li>
+<li>变量与賦值之间的数据类型是否能够匹配等</li>
+<li>还有一个重要的动作称为常量折叠,如果我们在代码中写了如下定义:</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> a = <span class="number">1</span> + <span class="number">2</span>;</span><br></pre></td></tr></table></figure>
+<p>那么在语法树上仍然能看到字面量” 1”、”2”以及操作符”+”,但是在经过常量折叠之后 ,它们将会被折叠为字面量”3” 由于编译期间进行了常量折叠 ,所以在代码里面定义”a=1+2”比起直接定义”a=3” , 并不会增加程序运行期哪怕仅仅一个 CPU指令的运算量。</p>
+<hr>
+<h5 id="二-数据及控制流分析"><a href="#二-数据及控制流分析" class="headerlink" title="二.数据及控制流分析"></a>二.数据及控制流分析</h5><p><strong>是对程序上下文逻辑更进一步的验证</strong>它可以检查出诸如</p>
+<ol>
+<li>程序局部变量在使用前是否有赋值</li>
+<li>方法的每条路径是否都有返回值</li>
+<li>是否所有的受查异常都被正确处理了等问题。</li>
+</ol>
+<p>编译时期的数据及控制流分析与<strong>类加载时</strong>的数据及控制流分析的目的基本上是一致的，<strong>但校验范围有所区别，有一些校验项只有在编译期或运行期才能进行。</strong></p>
+<p>举一个final修饰符的数据及控制流分析的例子：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">foo</span><span class="params">(<span class="keyword">final</span> <span class="keyword">int</span> arg)</span></span>&#123;</span><br><span class="line">    <span class="keyword">final</span> <span class="keyword">int</span> <span class="keyword">var</span> = <span class="number">0</span>;</span><br><span class="line">    <span class="comment">//do something</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">foo</span><span class="params">(<span class="keyword">int</span> arg)</span></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> <span class="keyword">var</span> = <span class="number">0</span>;</span><br><span class="line">    <span class="comment">//do something</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上面两段不同的代码，在编写的时候，final定义的变量不能再次改变arg和var的值，<strong>但是两段代码编译出来的Class文件是没有任何一点区别的。</strong>局部变量和字段（实例变量和类变量）是有很大区别的。</p>
+<p>局部变量在常量池中没有 CONSTANT_Fieldref_info的符号引用,自然就没有访问标志(Access_Flags ) 的信息,甚至可能连名称都不会保留下来(取决于编译时的选项),<strong>自然在Class文件中不可能知道一个局部变量是不是声明为final了。</strong></p>
+<p><strong>因此,将局部变量声明为final,对运行期是没有影响的,变量的不变性仅仅由编译器在编译期间保障。</strong></p>
+<hr>
+<h5 id="三-解语法糖"><a href="#三-解语法糖" class="headerlink" title="三.解语法糖"></a>三.解语法糖</h5><p>指在计算机语言中添加的某种语法,这种语法对语言的功能并没有影响,但是更方便程序员使用。通常来说,使用语法糖能够增加程序的可读性, 从而减少程序代码出错的机会。</p>
+<p>Java中最常用的语法糖主要是前面提到过的泛型(泛型并不一定都是语法糖实现,如C#的泛型就是直接由CLR支持的 )、变长参数、自动装箱/拆箱等,虚拟机运行时不支持这些语法 ,它们在编译阶段还原回简单的基础语法结构,这个过程称为解语法糖。</p>
+<p>在Javac的源码中,解语法糖的过程由desugar() 方法触发。</p>
+<h5 id="四-字节码生成"><a href="#四-字节码生成" class="headerlink" title="四.字节码生成"></a>四.字节码生成</h5><p>字节码生成是Javac编译过程的最后一个阶段，<strong>字节码生成阶段不仅仅是把前面各个步骤所生成的信息 (语法树、符号表)转化成字节码写到磁盘中,编译器还进行了少量的代码添加和转换工作。</strong></p>
+<p>例如,前面章节中多次提到的实例构造器<init>() 方法和类构造器<clinit> ()方法就是在这个阶段添加到语法树之中的。</clinit></init></p>
+<p>这两个构造器的产生过程实际上是一个<strong>代码收敛的过程</strong>,编译器会把<strong>语句块</strong>、<strong>变量初始化</strong>、<strong>调用父类的实例构造器</strong> 等操作收敛到<init>() 和<clinit>() 方法之中,<strong>并且保证一定是按先执行父类的实例构造器,然后初始化变量,最后执行语句块的顺序进行</strong>。</clinit></init></p>
+<p>上面所述的动作由Gen.normalizeDefs() 方法来实现。<strong>除了生成构造器以外,还有其他的一些代码替换工作用于优化程序的实现逻辑</strong>。</p>
+<p>如把字符串的加操作替换为StringBuffer或StringBuilder ( 取决于目标代码的版本是否大于或等于JDK 1.5 )的append() 操作等。</p>
+<p>完成了对语法树的遍历和调整之后,就会把填充了所有所需信息的符号表交给com.sun.tools.javac.jvm.ClassWriter类 ,由这个类的writeClass()方法输出字节码,生成最终的Class文件 ,到此为止整个编译过程宣告结束。</p>
+<hr>
+<p><strong>备注：</strong>    </p>
+<p><strong>填充默认构造函数</strong>——这里的实例构造器并不是指默认构造函数, 如果用户代码中没有提供任何构造函数,那编译器将会添加一个没有参数的、访问性( public、 protected或private ) 与当前类一致的默认构造函数,这个工作在填充符号表阶段就已经完成</p>
+<p><strong>语句块</strong>——对于实例构造器而言是“{}”块 ,对于类构造器而言是“static{}”块</p>
+<p><strong>变量初始化</strong>——实例变量和类变量</p>
+<p><strong>调用父类的实例构造器</strong> —— 仅仅是实例构造器,<clinit>()方法中无须调用父类的<clinit>() 方法,虚拟机会自动保证父类构造器的执行,但在<clinit>() 方法中经常会生成调用java.lang.Object的<init>() 方法的代码 </init></clinit></clinit></clinit></p>
+<h3 id="三-Java语法糖"><a href="#三-Java语法糖" class="headerlink" title="三.Java语法糖"></a>三.Java语法糖</h3><p>这些语法糖虽然不会提供实质性的功能改进,但是它们或能提高效率,或能提升语法的严谨性,或能减少编码出错的机会。</p>
+<p>不过也有一种观点认为语法糖并不一定都是有益的,大量添加和使用“含糖”的语法,容易让程序员产生依赖,无法看清语法糖的糖衣背后,程序代码的真实面目。</p>
+<p>总而言之,语法糖可以看做是编译器实现的一些“小把戏” ,这些“小把戏”可能会使得效率“大提升” ,但我们也应该去了解这些“小把戏”背后的真实世界,那样才能利用好它们,而不是被它们所迷惑。</p>
+<h4 id="一-泛型与类型擦除"><a href="#一-泛型与类型擦除" class="headerlink" title="一.泛型与类型擦除"></a>一.泛型与类型擦除</h4><p>泛型是JDK1.5的一项新增特性，<strong>本质是参数化类型的应用，也就是说所操作的数据类型被指定为一个参数。</strong></p>
+<p>在 Java 语言还处于没有出现泛型的版本的时候，<strong>只能通过 Object 类是所有类型的父类和类型强制转换两个特点的配合来实现类型泛化。</strong> </p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">例如，在 HashMap 的存取中，get() 方法返回的就是一个 Object 对象，由于 Java 语言所有的类型都继承于 java.lang.Object ， 所以 Object 转型成任何对象都是有可能的。但是也因为有无限的可能性，就只有程序员和运行期的虚拟机知道这个Object 到底是什么类型的对象。</span><br><span class="line"></span><br><span class="line">在编译期间，编译器无法检查这个 Object 的强制转型是否成功，如果仅仅依赖于程序员去保障这项操作的正确性，许多 ClassCastException 的风险就会转嫁到程序运行期中。</span><br></pre></td></tr></table></figure>
+<p>但是，泛型技术在 C# 和 Java 之中的使用方式看似相同，在实现上却有着根本性的分歧，C# 的泛型无论是在源码中、编译后的 IL 中，或是运行期的 CLR 中，都是切实存在的， List<int> 和 List<string> 就是两个不同的类型，<strong>它们在运行期间，有自己的虚方法表和类型数据，这种实现称为类型膨胀，基于这种方法实现的泛型称为真实泛型。</strong></string></int></p>
+<p>  Java 中的泛型则不一样，它只在程序源码中存在，<strong>在编译后的字节码文件中，就已经替换为原来的原生类型（Raw Type ， 也成为裸类型）了，并且在相应的地方插入了强制类型转换代码</strong>，因此，对于运行期的 Java 语言来说，ArrayList<integer> 和 ArrayList<string> 就是同一个类，所以泛型技术实际上是 Java 语言的一颗语法糖，<strong>Java 语言中的泛型实现方法称为类型擦除，基于这种方法实现的泛型称为伪泛型。</strong></string></integer></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">		Map&lt;String, String&gt; map = <span class="keyword">new</span> HashMap&lt;String, String&gt;();</span><br><span class="line">		map.put(<span class="string">"hello"</span>, <span class="string">"你好"</span>);</span><br><span class="line">		map.put(<span class="string">"devil"</span>, <span class="string">"恶魔"</span>);</span><br><span class="line">		System.out.println(map.get(<span class="string">"hello"</span>));</span><br><span class="line">		System.out.println(map.get(<span class="string">"devil"</span>));</span><br><span class="line"></span><br><span class="line">｝</span><br></pre></td></tr></table></figure>
+<p>借助反编译来查看编译后的代码</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">		Map map = <span class="keyword">new</span> HashMap();		<span class="comment">//已经变回了原生类型</span></span><br><span class="line">		map.put(<span class="string">"hello"</span>, <span class="string">"你好"</span>);</span><br><span class="line">		map.put(<span class="string">"devil"</span>, <span class="string">"恶魔"</span>);</span><br><span class="line">		System.out.println(map.get(<span class="string">"hello"</span>));</span><br><span class="line">		System.out.println(map.get(<span class="string">"devil"</span>));</span><br><span class="line"></span><br><span class="line">｝</span><br></pre></td></tr></table></figure>
+<p>下面来看泛型对于重载的影响：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> Class GenericTypes&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> stataic <span class="keyword">void</span> <span class="title">methed</span><span class="params">(List&lt;String&gt; list)</span></span>&#123;</span><br><span class="line">   		System.out.println(<span class="string">"List&lt;String&gt; list"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> stataic <span class="keyword">void</span> <span class="title">methed</span><span class="params">(List&lt;Integer&gt; list)</span></span>&#123;</span><br><span class="line">   		System.out.println(<span class="string">"List&lt;Integer&gt; list"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上面的代码如果被编译的话，泛型已经被擦除了，变成了一模一样的原生类型，导致方法的<strong>特征签名（java代码层面上的签名是指——方法名和参数类型和参数顺序，字节码上的特征签名还包括方法返回值及受查异常表）</strong>一样，所以上面的代码无法被编译。<strong>但这只是无法重载的原因之一。</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> Class GenericTypes&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> stataic String <span class="title">methed</span><span class="params">(List&lt;String&gt; list)</span></span>&#123;</span><br><span class="line">   		System.out.println(<span class="string">"List&lt;String&gt; list"</span>);</span><br><span class="line">   		<span class="keyword">return</span> <span class="string">""</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> stataic <span class="keyword">int</span> <span class="title">methed</span><span class="params">(List&lt;Integer&gt; list)</span></span>&#123;</span><br><span class="line">   		System.out.println(<span class="string">"List&lt;Integer&gt; list"</span>);</span><br><span class="line">   		<span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span></span>&#123;</span><br><span class="line">        method(<span class="keyword">new</span> ArrayList&lt;String&gt;());</span><br><span class="line">        method(<span class="keyword">new</span> ArrayList&lt;Integer&gt;());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//输出结果</span></span><br><span class="line">List&lt;String&gt; list</span><br><span class="line">List&lt;Integer&gt; list</span><br></pre></td></tr></table></figure>
+<p>代码被成功编译并且被执行了，因为在Class文件方法表中，方法重载要求方法具备不同的特征签名，<strong>返回值并不包括在特征签名之中，所以返回值不参与重载选择。</strong></p>
+<p><strong>但是在Class文件格式当中，只要描述符不是完全一致的两个方法就可以共存。也就是说，两个方法如果有相同的名称和特征签名，但是返回值不同，那他么也是可以合法地共存于一个Class文件中的。</strong></p>
+<hr>
+<p>由于泛型的引入，在很多方面都需要获得传入的参数化类型，所以 JCP 组织对虚拟机规范做出了修改，引入了一系列重要的参数，<strong>Signature</strong> 是其中很重要的一个参数。<strong>作用是在字节码层面上存储了一个方法的特征签名，这个属性中保存的参数并不是原生类型而是包括了参数化类型的信息。</strong></p>
+<p>由此也可以知道<strong>Signature</strong>属性的出现，<strong>我们还可以知道类型擦除只是对方法Code属性的字节码进行擦除，而实际上元数据还是保留了泛型信息，也是反射能够获得参数化类型的根本原因。</strong></p>
+<h4 id="二-自动装箱和拆箱，循环遍历"><a href="#二-自动装箱和拆箱，循环遍历" class="headerlink" title="二.自动装箱和拆箱，循环遍历"></a>二.自动装箱和拆箱，循环遍历</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;  </span><br><span class="line">    List list = Arrays.asList(<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>);  </span><br><span class="line">    <span class="comment">//如果是在 JDK 1.7 还有另外一颗语法糖  </span></span><br><span class="line">    <span class="comment">// List list = [1,2,3,4];  </span></span><br><span class="line">    <span class="keyword">int</span> sum =<span class="number">0</span>;  </span><br><span class="line">    <span class="keyword">for</span>(<span class="keyword">int</span> i : list)&#123;  </span><br><span class="line">        sum+=i;  </span><br><span class="line">    &#125;  </span><br><span class="line">    System.out.print(sum);  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>反编译之后</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String args[])</span> </span>&#123;  </span><br><span class="line">    List list = Arrays.asList(<span class="keyword">new</span> Integer[] &#123;   </span><br><span class="line">            Integer.valueOf(<span class="number">1</span>),  </span><br><span class="line">            Integer.valueOf(<span class="number">2</span>),   </span><br><span class="line">            Integer.valueOf(<span class="number">3</span>),   </span><br><span class="line">            Integer.valueOf(<span class="number">4</span>) &#125;);  </span><br><span class="line">    <span class="keyword">int</span> sum = <span class="number">0</span>;  </span><br><span class="line">    <span class="keyword">for</span> (Iterator iterator = list.iterator(); iterator.hasNext();) &#123;  </span><br><span class="line">        <span class="keyword">int</span> i = ((Integer) iterator.next()).intValue();  </span><br><span class="line">        sum += i;  </span><br><span class="line">    &#125;  </span><br><span class="line">  </span><br><span class="line">    System.out.print(sum);  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ol>
+<li>自动装箱、拆箱在编译之后被转化成了对应的包装和还原方法。如本例中的 Integer.valueof() 与Integer.intValue() 方法。</li>
+<li>而遍历循环则把代码还原成了 迭代器的实现，这也是为何遍历循环需要被遍历的类实现 Iterable 接口的原因。</li>
+<li>变长参数则在调用的时候变成了一个数组类型的参数，在变长类型出现之前，程序员就是使用数组来完成类似功能的。</li>
+</ol>
+<p>有的时候，不节制的或不正确的使用装箱和拆箱会给我们带了极大的困扰</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">		Integer a = <span class="number">1</span>;</span><br><span class="line">		Integer b = <span class="number">2</span>;</span><br><span class="line">		Integer c = <span class="number">3</span>;</span><br><span class="line">		Integer d = <span class="number">3</span>;</span><br><span class="line">		Integer e = <span class="number">321</span>;</span><br><span class="line">		Integer f = <span class="number">321</span>;</span><br><span class="line">		Long g = <span class="number">3L</span>;</span><br><span class="line">		System.out.println(c == d);</span><br><span class="line">		System.out.println(e == f);</span><br><span class="line">		System.out.println(c == (a + b));</span><br><span class="line">		System.out.println(c.equals(a + b));</span><br><span class="line">		System.out.println(g == (a + b));</span><br><span class="line">		System.out.println(g.equals(a + b));</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+<p>由于包装类的 “==” 运算不遇到算数运算的情况下不会自动拆箱，还有equals方法不处理数据转型的关系，还是少用自动装拆箱。</p>
+<h3 id="四-参考资料"><a href="#四-参考资料" class="headerlink" title="四.参考资料"></a>四.参考资料</h3><p>《深入理解Java虚拟机》—— 周志明</p>
+</the></excerpt>
+      
+      
+    </div>
+    
+  </div>
+  
+    
+    <div class="copyright">
+        <p><span>本文标题:</span><a href="/2019/04/06/Java编译期优化/">Java早期(编译期)优化</a></p>
+        <p><span>文章作者:</span><a href="/" title="访问 Whits 的个人博客">Whits</a></p>
+        <p><span>发布时间:</span>2019年04月06日 - 16时05分</p>
+        <p><span>最后更新:</span>2019年05月08日 - 17时17分</p>
+        <p>
+            <span>原始链接:</span><a class="post-url" href="/2019/04/06/Java编译期优化/" title="Java早期(编译期)优化">http://yoursite.com/2019/04/06/Java编译期优化/</a>
+            <span class="copy-path" data-clipboard-text="原文: http://yoursite.com/2019/04/06/Java编译期优化/　　作者: Whits" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <script src="/js/clipboard.min.js"></script>
+            <script> var clipboard = new Clipboard('.copy-path'); </script>
+        </p>
+        <p>
+            <span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/3.0/cn/" title="中国大陆 (CC BY-NC-SA 3.0 CN)" target="_blank">"署名-非商用-相同方式共享 3.0"</a> 转载请保留原文链接及作者。
+        </p>
+    </div>
+
+
+
+<nav id="article-nav">
+  
+    <a href="/2019/04/14/Java运行期优化(一)/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption"><</strong>
+      <div class="article-nav-title">
+        
+          Java晚期(运行期)优化(一)
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2019/03/23/String源码剖析/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">String部分源码剖析</div>
+      <strong class="article-nav-caption">></strong>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+    <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#一-Java编译的三种情况"><span class="toc-number">1.</span> <span class="toc-text">一.Java编译的三种情况</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#二-Javac的编译过程"><span class="toc-number">2.</span> <span class="toc-text">二.Javac的编译过程</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#编译过程一：解析与填充符号表"><span class="toc-number">2.1.</span> <span class="toc-text">编译过程一：解析与填充符号表</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#词法分析："><span class="toc-number">2.1.1.</span> <span class="toc-text">词法分析：</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#语法分析："><span class="toc-number">2.1.2.</span> <span class="toc-text">语法分析：</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#填充符号表："><span class="toc-number">2.1.3.</span> <span class="toc-text">填充符号表：</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#编译过程二：注解处理（修改AST抽象语法树）"><span class="toc-number">2.2.</span> <span class="toc-text">编译过程二：注解处理（修改AST抽象语法树）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#编译过程三-语义分析和字节码生成"><span class="toc-number">2.3.</span> <span class="toc-text">编译过程三: 语义分析和字节码生成</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#一-标注检查步骤检查的内容"><span class="toc-number">2.3.1.</span> <span class="toc-text">一.标注检查步骤检查的内容</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#二-数据及控制流分析"><span class="toc-number">2.3.2.</span> <span class="toc-text">二.数据及控制流分析</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#三-解语法糖"><span class="toc-number">2.3.3.</span> <span class="toc-text">三.解语法糖</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#四-字节码生成"><span class="toc-number">2.3.4.</span> <span class="toc-text">四.字节码生成</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#三-Java语法糖"><span class="toc-number">3.</span> <span class="toc-text">三.Java语法糖</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#一-泛型与类型擦除"><span class="toc-number">3.1.</span> <span class="toc-text">一.泛型与类型擦除</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#二-自动装箱和拆箱，循环遍历"><span class="toc-number">3.2.</span> <span class="toc-text">二.自动装箱和拆箱，循环遍历</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#四-参考资料"><span class="toc-number">4.</span> <span class="toc-text">四.参考资料</span></a></li></ol>
+</div>
+<input type="button" id="tocButton" value="隐藏目录" title="点击按钮隐藏或者显示文章目录">
+
+<script src="https://7.url.cn/edu/jslib/comb/require-2.1.6,jquery-1.9.1.min.js"></script>
+<script>
+    var valueHide = "隐藏目录";
+    var valueShow = "显示目录";
+
+    if ($(".left-col").is(":hidden")) {
+        $("#tocButton").attr("value", valueShow);
+    }
+    $("#tocButton").click(function() {
+        if ($("#toc").is(":hidden")) {
+            $("#tocButton").attr("value", valueHide);
+            $("#toc").slideDown(320);
+        }
+        else {
+            $("#tocButton").attr("value", valueShow);
+            $("#toc").slideUp(350);
+        }
+    })
+    if ($(".toc").length < 1) {
+        $("#toc, #tocButton").hide();
+    }
+</script>
+
+
+
+
+
+<div class="bdsharebuttonbox">
+	<a href="#" class="fx fa-weibo bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+	<a href="#" class="fx fa-weixin bds_weixin" data-cmd="weixin" title="分享到微信"></a>
+	<a href="#" class="fx fa-qq bds_sqq" data-cmd="sqq" title="分享到QQ好友"></a>
+	<a href="#" class="fx fa-facebook-official bds_fbook" data-cmd="fbook" title="分享到Facebook"></a>
+	<a href="#" class="fx fa-twitter bds_twi" data-cmd="twi" title="分享到Twitter"></a>
+	<a href="#" class="fx fa-linkedin bds_linkedin" data-cmd="linkedin" title="分享到linkedin"></a>
+	<a href="#" class="fx fa-files-o bds_copy" data-cmd="copy" title="分享到复制网址"></a>
+</div>
+<script>window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"2","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];</script>
+
+
+
+
+    
+      <div class="duoshuo" id="comments">
+    <!-- 多说评论框 start -->
+    <div class="ds-thread" data-thread-key="2019/04/06/Java编译期优化/" data-title="Java早期(编译期)优化" data-url="http://yoursite.com/2019/04/06/Java编译期优化/"></div>
+    <!-- 多说评论框 end -->
+    <!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+    <script type="text/javascript">
+    var duoshuoQuery = {short_name:"luuman"};
+    (function() {
+        var ds = document.createElement('script');
+        ds.type = 'text/javascript';ds.async = true;
+        ds.src = '/js/embed.js';
+        ds.charset = 'UTF-8';
+        (document.getElementsByTagName('head')[0] 
+         || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+    </script>
+    <!-- 多说公共JS代码 end -->
+</div>
+
+    
+
+
+
+    <div class="scroll" id="post-nav-button">
+        
+            <a href="/2019/04/14/Java运行期优化(一)/" title="上一篇: Java晚期(运行期)优化(一)">
+                <i class="fa fa-angle-left"></i>
+            </a>
+        
+        <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
+        
+            <a href="/2019/03/23/String源码剖析/" title="下一篇: String部分源码剖析">
+                <i class="fa fa-angle-right"></i>
+            </a>
+        
+    </div>
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019/04/23/Mysql技术内幕-索引(一)/">Mysql之InnoDB的索引（一）</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/23/Mysql技术内幕-索引(二)/">Mysql之InnoDB的索引（二）</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/17/Java运行期优化(二)/">Java晚期(运行期)优化(二)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/14/Java运行期优化(一)/">Java晚期(运行期)优化(一)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/06/Java编译期优化/">Java早期(编译期)优化</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/23/String源码剖析/">String部分源码剖析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/15/Object源码剖析/">Object源码剖析（顺带分析了notify/wait）</a></li></ul>
+    <script src="https://7.url.cn/edu/jslib/comb/require-2.1.6,jquery-1.9.1.min.js"></script>
+    <script>
+        $(".post-list").addClass("toc-article");
+        $(".post-list-item a").attr("target","_blank");
+        $("#post-nav-button > a:nth-child(2)").click(function() {
+            $(".fa-bars, .fa-times").toggle();
+            $(".post-list").toggle(300);
+            if ($(".toc").length > 0) {
+                $("#toc, #tocButton").toggle(200, function() {
+                    if ($(".switch-area").is(":visible")) {
+                        $("#tocButton").attr("value", valueHide);
+                        }
+                    })
+            }
+            else {
+            }
+        })
+    </script>
+
+
+
+    <script>
+        
+    </script>
+</div>
+      <footer id="footer">
+    <div class="outer">
+        <div id="footer-info">
+            <div class="footer-left">
+                &copy; 2019 Whits
+            </div>
+            <div class="footer-right">
+                <a href="http://hexo.io/" target="_blank">Hexo</a>  Theme <a href="https://github.com/luuman/hexo-theme-spfk" target="_blank">spfk</a> by luuman
+            </div>
+        </div>
+        
+            <div class="visit">
+                
+                    <span id="busuanzi_container_site_pv" style="display:none">
+                        <span id="site-visit">到访数: 
+                            <span id="busuanzi_value_site_uv"></span>
+                        </span>
+                    </span>
+                
+                
+                    <span>, </span>
+                
+                
+                    <span id="busuanzi_container_page_pv" style="display:none">
+                        <span id="page-visit">本页阅读量: 
+                            <span id="busuanzi_value_page_pv"></span>
+                        </span>
+                    </span>
+                
+            </div>
+        
+    </div>
+</footer>
+
+    </div>
+    <script src="https://7.url.cn/edu/jslib/comb/require-2.1.6,jquery-1.9.1.min.js"></script>
+<script src="/js/main.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            var backgroundnum = 24;
+            var backgroundimg = "url(/background/bg-x.jpg)".replace(/x/gi, Math.ceil(Math.random() * backgroundnum));
+            $("#mobile-nav").css({"background-image": backgroundimg,"background-size": "cover","background-position": "center"});
+            $(".left-col").css({"background-image": backgroundimg,"background-size": "cover","background-position": "center"});
+        })
+    </script>
+
+
+
+
+
+<div class="scroll" id="scroll">
+    <a href="#"><i class="fa fa-arrow-up"></i></a>
+    <a href="#comments"><i class="fa fa-comments-o"></i></a>
+    <a href="#footer"><i class="fa fa-arrow-down"></i></a>
+</div>
+<script>
+    $(document).ready(function() {
+        if ($("#comments").length < 1) {
+            $("#scroll > a:nth-child(2)").hide();
+        };
+    })
+</script>
+
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+
+  <script language="javascript">
+    $(function() {
+        $("a[title]").each(function() {
+            var a = $(this);
+            var title = a.attr('title');
+            if (title == undefined || title == "") return;
+            a.data('title', title).removeAttr('title').hover(
+
+            function() {
+                var offset = a.offset();
+                $("<div id=\"anchortitlecontainer\"></div>").appendTo($("body")).html(title).css({
+                    top: offset.top - a.outerHeight() - 15,
+                    left: offset.left + a.outerWidth()/2 + 1
+                }).fadeIn(function() {
+                    var pop = $(this);
+                    setTimeout(function() {
+                        pop.remove();
+                    }, pop.text().length * 800);
+                });
+            }, function() {
+                $("#anchortitlecontainer").remove();
+            });
+        });
+    });
+</script>
+
+
+  </div>
+</body>
+</html>
