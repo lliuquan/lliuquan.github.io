@@ -3,18 +3,18 @@
 <head><meta name="generator" content="Hexo 3.8.0">
   <meta charset="utf-8">
   
-  <title>Whits&#39;s Blog</title>
+  <title>String部分源码剖析 | Whits&#39;s Blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta name="description" content="本文主要讲解了 JDK 下的String的部分源码，以及涉及到的String的一些相关知识点,比如，本文参考资料见下文">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Whits&#39;s Blog">
-<meta property="og:url" content="http://yoursite.com/2019/05/05/String源码剖析/index.html">
+<meta property="og:title" content="String部分源码剖析">
+<meta property="og:url" content="http://yoursite.com/2019/03/23/String源码剖析/index.html">
 <meta property="og:site_name" content="Whits&#39;s Blog">
 <meta property="og:description" content="本文主要讲解了 JDK 下的String的部分源码，以及涉及到的String的一些相关知识点,比如，本文参考资料见下文">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2019-05-07T13:07:09.051Z">
+<meta property="og:updated_time" content="2019-05-08T07:29:37.442Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Whits&#39;s Blog">
+<meta name="twitter:title" content="String部分源码剖析">
 <meta name="twitter:description" content="本文主要讲解了 JDK 下的String的部分源码，以及涉及到的String的一些相关知识点,比如，本文参考资料见下文">
   
     <link rel="alternative" href="/atom.xml" title="Whits&#39;s Blog" type="application/atom+xml">
@@ -236,8 +236,8 @@
       <div class="body-wrap"><article id="post-String源码剖析" class="article article-type-post" itemscope itemprop="blogPost">
   
     <div class="article-meta">
-      <a href="/2019/05/05/String源码剖析/" class="article-date">
-      <time datetime="2019-05-05T10:01:28.828Z" itemprop="datePublished">2019-05-05</time>
+      <a href="/2019/03/23/String源码剖析/" class="article-date">
+      <time datetime="2019-03-23T01:53:16.000Z" itemprop="datePublished">2019-03-23</time>
 </a>
     </div>
   
@@ -246,17 +246,33 @@
       <input type="hidden" class="isFancy">
     
     
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      String部分源码剖析
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+
+        
+        <div class="clearfix"></div>
+      </div>
+      
+    
     <div class="article-entry" itemprop="articleBody">
       
           
         <excerpt in index | 首页摘要> 
 
-<p>本文主要讲解了 JDK 下的String的部分源码，以及涉及到的String的一些相关知识点,比如，本文参考资料见下文</p>
-<a id="more"></a>
+<p>本文主要讲解了 JDK 下的String的部分源码，以及涉及到的String的一些相关知识点,比如，本文参考资料见下文<br><a id="more"></a></p>
 <the rest of contents | 余下全文>
 
-<p>title: String部分源码剖析</p>
-<h2 id="date-2019-03-23-00-00-00"><a href="#date-2019-03-23-00-00-00" class="headerlink" title="date: 2019-03-23 00:00:00"></a>date: 2019-03-23 00:00:00</h2><p>阅读该源码，所要具备的基础知识</p>
+<p>阅读该源码，所要具备的基础知识</p>
 <h4 id="1-字符集与字符编码"><a href="#1-字符集与字符编码" class="headerlink" title="1.字符集与字符编码"></a>1.字符集与字符编码</h4><p>​    计算机中储存的信息都是用二进制数表示的；而我们在屏幕上看到的英文、汉字等字符是二进制数转换之后的结果。通俗的说，按照何种规则将字符存储在计算机中，如’a’用什么表示，称为”编码”；</p>
 <p>​    反之，将存储在计算机中的二进制数解析显示出来，称为”解码”，如同密码学中的加密和解密。在解码过程中，如果使用了错误的解码规则，则导致’a’解析成’b’或者乱码。</p>
 <p>​    <strong>字符集（Charset）</strong>：是一个系统支持的所有抽象字符的集合。字符是各种文字和符号的总称，包括各国家文字、标点符号、图形符号、数字等。</p>
@@ -358,13 +374,13 @@
   
     
     <div class="copyright">
-        <p><span>本文标题:</span><a href="/2019/05/05/String源码剖析/"></a></p>
+        <p><span>本文标题:</span><a href="/2019/03/23/String源码剖析/">String部分源码剖析</a></p>
         <p><span>文章作者:</span><a href="/" title="访问 Whits 的个人博客">Whits</a></p>
-        <p><span>发布时间:</span>2019年05月05日 - 18时01分</p>
-        <p><span>最后更新:</span>2019年05月07日 - 21时07分</p>
+        <p><span>发布时间:</span>2019年03月23日 - 09时53分</p>
+        <p><span>最后更新:</span>2019年05月08日 - 15时29分</p>
         <p>
-            <span>原始链接:</span><a class="post-url" href="/2019/05/05/String源码剖析/" title>http://yoursite.com/2019/05/05/String源码剖析/</a>
-            <span class="copy-path" data-clipboard-text="原文: http://yoursite.com/2019/05/05/String源码剖析/　　作者: Whits" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <span>原始链接:</span><a class="post-url" href="/2019/03/23/String源码剖析/" title="String部分源码剖析">http://yoursite.com/2019/03/23/String源码剖析/</a>
+            <span class="copy-path" data-clipboard-text="原文: http://yoursite.com/2019/03/23/String源码剖析/　　作者: Whits" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
             <script src="/js/clipboard.min.js"></script>
             <script> var clipboard = new Clipboard('.copy-path'); </script>
         </p>
@@ -377,9 +393,18 @@
 
 <nav id="article-nav">
   
+    <a href="/2019/04/06/Java编译期优化/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption"><</strong>
+      <div class="article-nav-title">
+        
+          Java早期(编译期)优化
+        
+      </div>
+    </a>
   
-    <a href="/2019/04/14/Java运行期优化(一)/" id="article-nav-older" class="article-nav-link-wrap">
-      <div class="article-nav-title">Java晚期(运行期)优化(一)</div>
+  
+    <a href="/2019/03/15/Object源码剖析/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">Object源码剖析（顺带分析了notify/wait）</div>
       <strong class="article-nav-caption">></strong>
     </a>
   
@@ -390,7 +415,7 @@
 
     <div id="toc" class="toc-article">
     <strong class="toc-title">文章目录</strong>
-    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#date-2019-03-23-00-00-00"><span class="toc-number">1.</span> <span class="toc-text">date: 2019-03-23 00:00:00</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-字符集与字符编码"><span class="toc-number">1.0.1.</span> <span class="toc-text">1.字符集与字符编码</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-常用的字符集"><span class="toc-number">1.0.2.</span> <span class="toc-text">2.常用的字符集</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-Unicode编码的基本概念"><span class="toc-number">1.0.3.</span> <span class="toc-text">3.Unicode编码的基本概念</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#3-1-utf-16具体编码格式"><span class="toc-number">1.0.3.1.</span> <span class="toc-text">3.1 utf-16具体编码格式:</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#参考资料"><span class="toc-number">1.0.4.</span> <span class="toc-text">参考资料</span></a></li></ol></li></ol>
+    <ol class="toc"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-字符集与字符编码"><span class="toc-number">1.</span> <span class="toc-text">1.字符集与字符编码</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-常用的字符集"><span class="toc-number">2.</span> <span class="toc-text">2.常用的字符集</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-Unicode编码的基本概念"><span class="toc-number">3.</span> <span class="toc-text">3.Unicode编码的基本概念</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#3-1-utf-16具体编码格式"><span class="toc-number">3.1.</span> <span class="toc-text">3.1 utf-16具体编码格式:</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#参考资料"><span class="toc-number">4.</span> <span class="toc-text">参考资料</span></a></li></ol>
 </div>
 <input type="button" id="tocButton" value="隐藏目录" title="点击按钮隐藏或者显示文章目录">
 
@@ -456,16 +481,18 @@
 
     <div class="scroll" id="post-nav-button">
         
-            <a href="/" title="回到主页"><i class="fa fa-home"></i></a>
+            <a href="/2019/04/06/Java编译期优化/" title="上一篇: Java早期(编译期)优化">
+                <i class="fa fa-angle-left"></i>
+            </a>
         
         <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
         
-            <a href="/2019/04/14/Java运行期优化(一)/" title="下一篇: Java晚期(运行期)优化(一)">
+            <a href="/2019/03/15/Object源码剖析/" title="下一篇: Object源码剖析（顺带分析了notify/wait）">
                 <i class="fa fa-angle-right"></i>
             </a>
         
     </div>
-    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019/05/05/String源码剖析/">String源码剖析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/14/Java运行期优化(一)/">Java晚期(运行期)优化(一)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/15/Object源码剖析/">Object源码剖析（顺带分析了notify/wait）</a></li></ul>
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019/04/14/Java运行期优化(二)/">Java晚期(运行期)优化(二)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/14/Java运行期优化(一)/">Java晚期(运行期)优化(一)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/06/Java编译期优化/">Java早期(编译期)优化</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/23/String源码剖析/">String部分源码剖析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/15/Object源码剖析/">Object源码剖析（顺带分析了notify/wait）</a></li></ul>
     <script src="https://7.url.cn/edu/jslib/comb/require-2.1.6,jquery-1.9.1.min.js"></script>
     <script>
         $(".post-list").addClass("toc-article");
