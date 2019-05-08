@@ -6,6 +6,7 @@
   <title>Object源码剖析（顺带分析了notify/wait） | Whits&#39;s Blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta name="description" content="本文主要讲解了 JDK 下的Object的部分源码，以及涉及到的wait和notify的一些相关知识点，例如：对象锁与锁池和等待池，如何正确使用wait和notify，以及延伸出来的生产者与消费者问题，最后还有一些参考代码，本文参考资料见文末">
+<meta name="keywords" content="源码,Object,Wait&#x2F;Notify">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Object源码剖析（顺带分析了notify&#x2F;wait）">
 <meta property="og:url" content="http://yoursite.com/2019/03/15/Object源码剖析/index.html">
@@ -16,7 +17,7 @@
 <meta property="og:image" content="d:/BackupHexo/source/img/Object/waitPool2.png">
 <meta property="og:image" content="d:/BackupHexo/source/img/Object/mark1.png">
 <meta property="og:image" content="d:/BackupHexo/source/img/Object/mark2.png">
-<meta property="og:updated_time" content="2019-05-07T12:33:05.624Z">
+<meta property="og:updated_time" content="2019-05-08T08:30:06.973Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Object源码剖析（顺带分析了notify&#x2F;wait）">
 <meta name="twitter:description" content="本文主要讲解了 JDK 下的Object的部分源码，以及涉及到的wait和notify的一些相关知识点，例如：对象锁与锁池和等待池，如何正确使用wait和notify，以及延伸出来的生产者与消费者问题，最后还有一些参考代码，本文参考资料见文末">
@@ -148,7 +149,7 @@
                 
                 <section class="switch-part switch-part2">
                     <div class="widget tagcloud" id="js-tagcloud">
-                        <a href="/tags/centOS/" style="font-size: 10px;">centOS</a> <a href="/tags/tomcat/" style="font-size: 10px;">tomcat</a>
+                        <a href="/tags/JVM/" style="font-size: 20px;">JVM</a> <a href="/tags/Object/" style="font-size: 10px;">Object</a> <a href="/tags/String/" style="font-size: 10px;">String</a> <a href="/tags/Wait-Notify/" style="font-size: 10px;">Wait/Notify</a> <a href="/tags/源码/" style="font-size: 15px;">源码</a> <a href="/tags/编译期/" style="font-size: 10px;">编译期</a> <a href="/tags/运行期/" style="font-size: 15px;">运行期</a>
                     </div>
                 </section>
                 
@@ -512,7 +513,7 @@
   
     <div class="article-meta">
       <a href="/2019/03/15/Object源码剖析/" class="article-date">
-      <time datetime="2019-03-15T00:00:00.000Z" itemprop="datePublished">2019-03-15</time>
+      <time datetime="2019-03-15T00:09:42.000Z" itemprop="datePublished">2019-03-15</time>
 </a>
     </div>
   
@@ -533,8 +534,16 @@
       
       <div class="article-info article-info-post">
         
+    <div class="article-category tagcloud">
+    <a class="article-category-link" href="/categories/JDK源码/">JDK源码</a>
+    </div>
+
 
         
+    <div class="article-tag tagcloud">
+        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Object/">Object</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Wait-Notify/">Wait/Notify</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/源码/">源码</a></li></ul>
+    </div>
+
         <div class="clearfix"></div>
       </div>
       
@@ -889,8 +898,8 @@
     <div class="copyright">
         <p><span>本文标题:</span><a href="/2019/03/15/Object源码剖析/">Object源码剖析（顺带分析了notify/wait）</a></p>
         <p><span>文章作者:</span><a href="/" title="访问 Whits 的个人博客">Whits</a></p>
-        <p><span>发布时间:</span>2019年03月15日 - 08时00分</p>
-        <p><span>最后更新:</span>2019年05月07日 - 20时33分</p>
+        <p><span>发布时间:</span>2019年03月15日 - 08时09分</p>
+        <p><span>最后更新:</span>2019年05月08日 - 16时30分</p>
         <p>
             <span>原始链接:</span><a class="post-url" href="/2019/03/15/Object源码剖析/" title="Object源码剖析（顺带分析了notify/wait）">http://yoursite.com/2019/03/15/Object源码剖析/</a>
             <span class="copy-path" data-clipboard-text="原文: http://yoursite.com/2019/03/15/Object源码剖析/　　作者: Whits" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
@@ -998,7 +1007,7 @@
             <a href="/" title="回到主页"><i class="fa fa-home"></i></a>
         
     </div>
-    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019/04/14/Java运行期优化(二)/">Java晚期(运行期)优化(二)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/14/Java运行期优化(一)/">Java晚期(运行期)优化(一)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/06/Java编译期优化/">Java早期(编译期)优化</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/23/String源码剖析/">String部分源码剖析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/15/Object源码剖析/">Object源码剖析（顺带分析了notify/wait）</a></li></ul>
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019/04/17/Java运行期优化(二)/">Java晚期(运行期)优化(二)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/14/Java运行期优化(一)/">Java晚期(运行期)优化(一)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/06/Java编译期优化/">Java早期(编译期)优化</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/23/String源码剖析/">String部分源码剖析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/15/Object源码剖析/">Object源码剖析（顺带分析了notify/wait）</a></li></ul>
     <script src="https://7.url.cn/edu/jslib/comb/require-2.1.6,jquery-1.9.1.min.js"></script>
     <script>
         $(".post-list").addClass("toc-article");

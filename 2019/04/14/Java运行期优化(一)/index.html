@@ -6,6 +6,7 @@
   <title>Java晚期(运行期)优化(一) | Whits&#39;s Blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta name="description" content="本文主要讲解了Java代码在运行时期的一些情况（解释器和编译器）和运行时所做的事情（分层编译，热点代码的编译，热点探测的方法，以及探测方法的进一步展开），本文参考资料见下文">
+<meta name="keywords" content="JVM,运行期">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Java晚期(运行期)优化(一)">
 <meta property="og:url" content="http://yoursite.com/2019/04/14/Java运行期优化(一)/index.html">
@@ -15,7 +16,7 @@
 <meta property="og:image" content="c:/Users/liuquan/AppData/Roaming/Typora/typora-user-images/1557061474359.png">
 <meta property="og:image" content="c:/Users/liuquan/AppData/Roaming/Typora/typora-user-images/1557064143957.png">
 <meta property="og:image" content="c:/Users/liuquan/Downloads/java.png">
-<meta property="og:updated_time" content="2019-05-08T07:25:38.952Z">
+<meta property="og:updated_time" content="2019-05-08T08:30:51.757Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Java晚期(运行期)优化(一)">
 <meta name="twitter:description" content="本文主要讲解了Java代码在运行时期的一些情况（解释器和编译器）和运行时所做的事情（分层编译，热点代码的编译，热点探测的方法，以及探测方法的进一步展开），本文参考资料见下文">
@@ -147,7 +148,7 @@
                 
                 <section class="switch-part switch-part2">
                     <div class="widget tagcloud" id="js-tagcloud">
-                        <a href="/tags/centOS/" style="font-size: 10px;">centOS</a> <a href="/tags/tomcat/" style="font-size: 10px;">tomcat</a>
+                        <a href="/tags/JVM/" style="font-size: 20px;">JVM</a> <a href="/tags/Object/" style="font-size: 10px;">Object</a> <a href="/tags/String/" style="font-size: 10px;">String</a> <a href="/tags/Wait-Notify/" style="font-size: 10px;">Wait/Notify</a> <a href="/tags/源码/" style="font-size: 15px;">源码</a> <a href="/tags/编译期/" style="font-size: 10px;">编译期</a> <a href="/tags/运行期/" style="font-size: 15px;">运行期</a>
                     </div>
                 </section>
                 
@@ -532,8 +533,16 @@
       
       <div class="article-info article-info-post">
         
+    <div class="article-category tagcloud">
+    <a class="article-category-link" href="/categories/Java虚拟机/">Java虚拟机</a>
+    </div>
+
 
         
+    <div class="article-tag tagcloud">
+        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/JVM/">JVM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/运行期/">运行期</a></li></ul>
+    </div>
+
         <div class="clearfix"></div>
       </div>
       
@@ -630,7 +639,7 @@
         <p><span>本文标题:</span><a href="/2019/04/14/Java运行期优化(一)/">Java晚期(运行期)优化(一)</a></p>
         <p><span>文章作者:</span><a href="/" title="访问 Whits 的个人博客">Whits</a></p>
         <p><span>发布时间:</span>2019年04月14日 - 13时07分</p>
-        <p><span>最后更新:</span>2019年05月08日 - 15时25分</p>
+        <p><span>最后更新:</span>2019年05月08日 - 16时30分</p>
         <p>
             <span>原始链接:</span><a class="post-url" href="/2019/04/14/Java运行期优化(一)/" title="Java晚期(运行期)优化(一)">http://yoursite.com/2019/04/14/Java运行期优化(一)/</a>
             <span class="copy-path" data-clipboard-text="原文: http://yoursite.com/2019/04/14/Java运行期优化(一)/　　作者: Whits" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
@@ -646,7 +655,7 @@
 
 <nav id="article-nav">
   
-    <a href="/2019/04/14/Java运行期优化(二)/" id="article-nav-newer" class="article-nav-link-wrap">
+    <a href="/2019/04/17/Java运行期优化(二)/" id="article-nav-newer" class="article-nav-link-wrap">
       <strong class="article-nav-caption"><</strong>
       <div class="article-nav-title">
         
@@ -734,7 +743,7 @@
 
     <div class="scroll" id="post-nav-button">
         
-            <a href="/2019/04/14/Java运行期优化(二)/" title="上一篇: Java晚期(运行期)优化(二)">
+            <a href="/2019/04/17/Java运行期优化(二)/" title="上一篇: Java晚期(运行期)优化(二)">
                 <i class="fa fa-angle-left"></i>
             </a>
         
@@ -745,7 +754,7 @@
             </a>
         
     </div>
-    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019/04/14/Java运行期优化(二)/">Java晚期(运行期)优化(二)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/14/Java运行期优化(一)/">Java晚期(运行期)优化(一)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/06/Java编译期优化/">Java早期(编译期)优化</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/23/String源码剖析/">String部分源码剖析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/15/Object源码剖析/">Object源码剖析（顺带分析了notify/wait）</a></li></ul>
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019/04/17/Java运行期优化(二)/">Java晚期(运行期)优化(二)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/14/Java运行期优化(一)/">Java晚期(运行期)优化(一)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/06/Java编译期优化/">Java早期(编译期)优化</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/23/String源码剖析/">String部分源码剖析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/15/Object源码剖析/">Object源码剖析（顺带分析了notify/wait）</a></li></ul>
     <script src="https://7.url.cn/edu/jslib/comb/require-2.1.6,jquery-1.9.1.min.js"></script>
     <script>
         $(".post-list").addClass("toc-article");
