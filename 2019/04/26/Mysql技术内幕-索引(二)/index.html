@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="utf-8">
+  
+  <title>Mysql之InnoDB的索引（二） | Whits&#39;s Blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="本文主要讲解了索引是如何工作的，数据库的存取原理，InnoDB下的索引分类，B+树索引的原理和Cardinality 还有全文索引。本文参考资料见文末">
+<meta name="keywords" content="索引,B+树">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Mysql之InnoDB的索引（二）">
+<meta property="og:url" content="http://yoursite.com/2019/04/26/Mysql技术内幕-索引(二)/index.html">
+<meta property="og:site_name" content="Whits&#39;s Blog">
+<meta property="og:description" content="本文主要讲解了索引是如何工作的，数据库的存取原理，InnoDB下的索引分类，B+树索引的原理和Cardinality 还有全文索引。本文参考资料见文末">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="c:/Users/liuquan/AppData/Roaming/Typora/typora-user-images/1557363312964.png">
+<meta property="og:image" content="c:/Users/liuquan/AppData/Roaming/Typora/typora-user-images/1557363474836.png">
+<meta property="og:image" content="c:/Users/liuquan/AppData/Roaming/Typora/typora-user-images/1557363549111.png">
+<meta property="og:image" content="c:/Users/liuquan/AppData/Roaming/Typora/typora-user-images/1557363668148.png">
+<meta property="og:image" content="c:/Users/liuquan/AppData/Roaming/Typora/typora-user-images/1557363796403.png">
+<meta property="og:image" content="c:/Users/liuquan/AppData/Roaming/Typora/typora-user-images/1557363808307.png">
+<meta property="og:image" content="c:/Users/liuquan/AppData/Roaming/Typora/typora-user-images/1557363825906.png">
+<meta property="og:image" content="c:/Users/liuquan/AppData/Roaming/Typora/typora-user-images/1557363835849.png">
+<meta property="og:image" content="c:/Users/liuquan/AppData/Roaming/Typora/typora-user-images/1557363860248.png">
+<meta property="og:image" content="c:/Users/liuquan/AppData/Roaming/Typora/typora-user-images/1557363977093.png">
+<meta property="og:image" content="c:/Users/liuquan/AppData/Roaming/Typora/typora-user-images/1557365613000.png">
+<meta property="og:image" content="c:/Users/liuquan/AppData/Roaming/Typora/typora-user-images/1557365632763.png">
+<meta property="og:image" content="c:/Users/liuquan/AppData/Roaming/Typora/typora-user-images/1557365661267.png">
+<meta property="og:image" content="c:/Users/liuquan/AppData/Roaming/Typora/typora-user-images/1557365692269.png">
+<meta property="og:image" content="c:/Users/liuquan/AppData/Roaming/Typora/typora-user-images/1557367441177.png">
+<meta property="og:image" content="c:/Users/liuquan/AppData/Roaming/Typora/typora-user-images/1557369175531.png">
+<meta property="og:image" content="c:/Users/liuquan/AppData/Roaming/Typora/typora-user-images/1557396918773.png">
+<meta property="og:image" content="c:/Users/liuquan/AppData/Roaming/Typora/typora-user-images/1557396946371.png">
+<meta property="og:image" content="c:/Users/liuquan/AppData/Roaming/Typora/typora-user-images/1557396979534.png">
+<meta property="og:image" content="c:/Users/liuquan/AppData/Roaming/Typora/typora-user-images/1557403636692.png">
+<meta property="og:updated_time" content="2019-05-10T07:13:49.083Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Mysql之InnoDB的索引（二）">
+<meta name="twitter:description" content="本文主要讲解了索引是如何工作的，数据库的存取原理，InnoDB下的索引分类，B+树索引的原理和Cardinality 还有全文索引。本文参考资料见文末">
+<meta name="twitter:image" content="c:/Users/liuquan/AppData/Roaming/Typora/typora-user-images/1557363312964.png">
+  
+    <link rel="alternative" href="/atom.xml" title="Whits&#39;s Blog" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/img/favicon.png">
+  
+  
+      <link rel="stylesheet" href="//cdn.bootcss.com/animate.css/3.5.0/animate.min.css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/font-awesome/css/font-awesome.min.css">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  
+  
+      <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  
+  <!-- 加载特效 -->
+    <script src="/js/pace.js"></script>
+    <link href="/css/pace/pace-theme-flash.css" rel="stylesheet">
+  <script>
+      var yiliaConfig = {
+          rootUrl: '/',
+          fancybox: true,
+          animate: true,
+          isHome: false,
+          isPost: true,
+          isArchive: false,
+          isTag: false,
+          isCategory: false,
+          open_in_new: false
+      }
+  </script>
+</head></html>
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+    <header id="header" class="inner">
+        <a href="/" class="profilepic">
+            
+            <img lazy-src="/img/head.jpg" class="js-avatar">
+            
+        </a>
+
+        <hgroup>
+          <h1 class="header-author"><a href="/" title="Hi Mate">Whits</a></h1>
+        </hgroup>
+
+        
+        <p class="header-subtitle">just do it</p>
+        
+        
+        
+            <div id="switch-btn" class="switch-btn">
+                <div class="icon">
+                    <div class="icon-ctn">
+                        <div class="icon-wrap icon-house" data-idx="0">
+                            <div class="birdhouse"></div>
+                            <div class="birdhouse_holes"></div>
+                        </div>
+                        <div class="icon-wrap icon-ribbon hide" data-idx="1">
+                            <div class="ribbon"></div>
+                        </div>
+                        
+                        <div class="icon-wrap icon-link hide" data-idx="2">
+                            <div class="loopback_l"></div>
+                            <div class="loopback_r"></div>
+                        </div>
+                        
+                        
+                        <div class="icon-wrap icon-me hide" data-idx="3">
+                            <div class="user"></div>
+                            <div class="shoulder"></div>
+                        </div>
+                        
+                    </div>
+                    
+                </div>
+                <div class="tips-box hide">
+                    <div class="tips-arrow"></div>
+                    <ul class="tips-inner">
+                        <li>菜单</li>
+                        <li>标签</li>
+                        
+                        <li>友情链接</li>
+                        
+                        
+                        <li>关于我</li>
+                        
+                    </ul>
+                </div>
+            </div>
+        
+
+        <div id="switch-area" class="switch-area">
+            <div class="switch-wrap">
+                <section class="switch-part switch-part1">
+                    <nav class="header-menu">
+                        <ul>
+                        
+                            <li><a href="/works">作品展示</a></li>
+                        
+                            <li><a href="/tags">标签</a></li>
+                        
+                            <li><a href="/categories">分类</a></li>
+                        
+                        </ul>
+                    </nav>
+                    <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fl mail" target="_blank" href="mailto:780101896@qq.com" title="mail">mail</a>
+                            
+                                <a class="fl github" target="_blank" href="https://github.com/lliuquan" title="github">github</a>
+                            
+                                <a class="fl zhihu" target="_blank" href="https://www.zhihu.com/people/liu-quan-7-71/activities" title="zhihu">zhihu</a>
+                            
+                        </ul>
+                    </nav>
+                </section>
+                
+                
+                <section class="switch-part switch-part2">
+                    <div class="widget tagcloud" id="js-tagcloud">
+                        <a href="/tags/B-树/" style="font-size: 15px;">B+树</a> <a href="/tags/JVM/" style="font-size: 20px;">JVM</a> <a href="/tags/Object/" style="font-size: 10px;">Object</a> <a href="/tags/SQL语句/" style="font-size: 10px;">SQL语句</a> <a href="/tags/String/" style="font-size: 10px;">String</a> <a href="/tags/Wait-Notify/" style="font-size: 10px;">Wait/Notify</a> <a href="/tags/源码/" style="font-size: 15px;">源码</a> <a href="/tags/索引/" style="font-size: 15px;">索引</a> <a href="/tags/编译期/" style="font-size: 10px;">编译期</a> <a href="/tags/运行期/" style="font-size: 15px;">运行期</a>
+                    </div>
+                </section>
+                
+                
+                
+                <section class="switch-part switch-part3">
+                    <div id="js-friends">
+                    
+                      <a target="_blank" class="main-nav-link switch-friends-link" href="https://www.v2ex.com/">V2ex</a>
+                    
+                      <a target="_blank" class="main-nav-link switch-friends-link" href="https://segmentfault.com/">Segmentfault</a>
+                    
+                      <a target="_blank" class="main-nav-link switch-friends-link" href="https://stackoverflow.com/">Stackoverflow</a>
+                    
+                      <a target="_blank" class="main-nav-link switch-friends-link" href="https://www.hollischuang.com/">Hollis</a>
+                    
+                      <a target="_blank" class="main-nav-link switch-friends-link" href="http://www.iocoder.cn/?csdn">芋道源码</a>
+                    
+                      <a target="_blank" class="main-nav-link switch-friends-link" href="https://www.nowcoder.com/5810854">牛客</a>
+                    
+                      <a target="_blank" class="main-nav-link switch-friends-link" href="http://ifeve.com/">并发编程网</a>
+                    
+                      <a target="_blank" class="main-nav-link switch-friends-link" href="https://wx.zsxq.com/dweb/#/login">知识星球</a>
+                    
+                    </div>
+                </section>
+                
+
+                
+                
+                <section class="switch-part switch-part4">
+                
+                    <div id="js-aboutme">NBA、半个历史爱好者、编程学习者、运动爱好者、在校学生</div>
+                </section>
+                
+            </div>
+        </div>
+    </header>                
+</div>
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+      <div class="overlay">
+          <div class="slider-trigger"></div>
+          <h1 class="header-author js-mobile-header hide"><a href="/" title="Me">Whits</a></h1>
+      </div>
+    <div class="intrude-less">
+        <header id="header" class="inner">
+            <a href="/" class="profilepic">
+                
+                    <img lazy-src="/img/head.jpg" class="js-avatar">
+                
+            </a>
+            <hgroup>
+              <h1 class="header-author"><a href="/" title="Me">Whits</a></h1>
+            </hgroup>
+            
+            <p class="header-subtitle">just do it</p>
+            
+            <nav class="header-menu">
+                <ul>
+                
+                    <li><a href="/works">作品展示</a></li>
+                
+                    <li><a href="/tags">标签</a></li>
+                
+                    <li><a href="/categories">分类</a></li>
+                
+                <div class="clearfix"></div>
+                </ul>
+            </nav>
+            <nav class="header-nav">
+                <div class="social">
+                    
+                        <a class="mail" target="_blank" href="mailto:780101896@qq.com" title="mail">mail</a>
+                    
+                        <a class="github" target="_blank" href="https://github.com/lliuquan" title="github">github</a>
+                    
+                        <a class="zhihu" target="_blank" href="https://www.zhihu.com/people/liu-quan-7-71/activities" title="zhihu">zhihu</a>
+                    
+                </div>
+            </nav>
+        </header>                
+    </div>
+</nav>
+      <div class="body-wrap"><article id="post-Mysql技术内幕-索引(二)" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2019/04/26/Mysql技术内幕-索引(二)/" class="article-date">
+      <time datetime="2019-04-26T11:53:46.000Z" itemprop="datePublished">2019-04-26</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Mysql之InnoDB的索引（二）
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+    <div class="article-category tagcloud">
+    <a class="article-category-link" href="/categories/Mysql/">Mysql</a>
+    </div>
+
+
+        
+    <div class="article-tag tagcloud">
+        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/B-树/">B+树</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/索引/">索引</a></li></ul>
+    </div>
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          
+        <excerpt in index | 首页摘要> 
+
+<p>本文主要讲解了<strong>索引是如何工作的</strong>，<strong>数据库的存取原理</strong>，<strong>InnoDB下的索引分类</strong>，<strong>B+树索引的原理</strong>和<strong>Cardinality 还有全文索引</strong>。本文参考资料见文末</p>
+<a id="more"></a>
+<the rest of contents | 余下全文>
+
+<h3 id="一-B-树的定义及插入删除操作"><a href="#一-B-树的定义及插入删除操作" class="headerlink" title="一. B+树的定义及插入删除操作"></a>一. B+树的定义及插入删除操作</h3><h4 id="（1）B-树的定义"><a href="#（1）B-树的定义" class="headerlink" title="（1）B+树的定义"></a>（1）B+树的定义</h4><p>​    B+树由B树和索引顺序访问方法演化而来，<strong>但在实际情况中几乎没有使用B树的情况，B+树是为磁盘或其他直接存取辅助设备设计</strong>的一种平衡查找树。</p>
+<p>​    在B+树中，所有记录节点都是<strong>按键值的大小顺序存放在同一层的叶子节点上，由各叶子节点指针进行连接。</strong></p>
+<p>​    看一个B+树，其高度为2，每页可存放4条记录，扇出（fan out）为5。<strong>所有的记录都在叶子节点，并且是顺序存放的，若从左的叶子节点顺序遍历，可以得到所有健值的顺序排序。</strong></p>
+<p><img src="C:\Users\liuquan\AppData\Roaming\Typora\typora-user-images\1557363312964.png" alt="1557363312964"></p>
+<h4 id="（2）B-树的插入操作"><a href="#（2）B-树的插入操作" class="headerlink" title="（2）B+树的插入操作"></a>（2）B+树的插入操作</h4><p>B+树插入之后，还必须保持叶子节点的记录依旧排序，所以针对不同的情况会有不同的插入算法</p>
+<table>
+<thead>
+<tr>
+<th>Leaf   Page 满</th>
+<th>Index Page 满</th>
+<th>操作</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>No</td>
+<td>No</td>
+<td>直接将记录插入到叶子节点</td>
+</tr>
+<tr>
+<td>Yes</td>
+<td>No</td>
+<td>1)         拆分Leaf Page                                                                                                                        2)         将中间的节点放入到Index Page中                                                                                     3)         小于中间节点的记录放在左边                                                                                                       4)         大于或等于中间节点的记录放在右边</td>
+</tr>
+<tr>
+<td>Yes</td>
+<td>Yes</td>
+<td>1)         拆分Leaf Page                                                                                                                                          2)         小于中间节点的记录放左边                                                                                                                3)         大于或等于中间节点的记录放右边                                                                                                     4)         拆分Index Page                                                                                                                                 5)         小于中间节点的记录放左边                                                                                                                 6)         大于中间节点的记录放右边                                                                                                            7)         中间节点放入上一层Index Page</td>
+</tr>
+</tbody>
+</table>
+<h5 id="操作一："><a href="#操作一：" class="headerlink" title="操作一："></a><strong>操作一：</strong></h5><p><img src="C:\Users\liuquan\AppData\Roaming\Typora\typora-user-images\1557363474836.png" alt="1557363474836"></p>
+<p>​    原本是一个4阶B+树，4代表每个节点最多能拥有的孩子数,用实例来分析B+树的插入，我们插入28这个键值，发现当前Leaf Page和Index Page都没有满，我们直接插入就可以了,可以得到下图。</p>
+<p><img src="C:\Users\liuquan\AppData\Roaming\Typora\typora-user-images\1557363549111.png" alt="1557363549111"></p>
+<h5 id="操作二"><a href="#操作二" class="headerlink" title="操作二:"></a><strong>操作二:</strong></h5><p>​    再插入一条70这个键值，这时原先的Leaf Page已经满了，但是Index Page还没有满，符合表的第二种情况，这时插入Leaf Page后的情况为50、55、60、65、70，根据中间的值60拆分叶节点。</p>
+<p><img src="C:\Users\liuquan\AppData\Roaming\Typora\typora-user-images\1557363668148.png" alt="1557363668148"></p>
+<h5 id="操作三："><a href="#操作三：" class="headerlink" title="操作三："></a><strong>操作三：</strong></h5><p>即Leaf Page和Index Page都满了</p>
+<p><img src="C:\Users\liuquan\AppData\Roaming\Typora\typora-user-images\1557363796403.png" alt="1557363796403"></p>
+<p><img src="C:\Users\liuquan\AppData\Roaming\Typora\typora-user-images\1557363808307.png" alt="1557363808307"></p>
+<p><img src="C:\Users\liuquan\AppData\Roaming\Typora\typora-user-images\1557363825906.png" alt="1557363825906"></p>
+<p><img src="C:\Users\liuquan\AppData\Roaming\Typora\typora-user-images\1557363835849.png" alt="1557363835849"></p>
+<p><img src="C:\Users\liuquan\AppData\Roaming\Typora\typora-user-images\1557363860248.png" alt="1557363860248"></p>
+<h5 id="小结："><a href="#小结：" class="headerlink" title="小结："></a>小结：</h5><ol>
+<li>不管怎么变化，B+树总会保持平衡。但是为了保持平衡对于新插入的健值可能需要做大量的拆分页操作。</li>
+<li>由于B+树主要用于磁盘结构，所以页的拆分意味着磁盘的操作，耗时巨大，所有应该在可能的情况下尽量减少页的拆分操作。</li>
+<li>B+树也提供了类似平衡二叉树的旋转功能，旋转发生在Leaf Page已经满了、但是其左右兄弟节点没有满的情况下。这时B+树并不会急于去做拆分页的操作，而是将记录移到所在页的兄弟节点上。</li>
+</ol>
+<p><strong>备注：</strong>通常情况下，左兄弟被首先检查用来做旋转操作，这时我们插入键值70，其实B+树并不会急于去拆分叶节点，而是做旋转操作。</p>
+<p><img src="C:\Users\liuquan\AppData\Roaming\Typora\typora-user-images\1557363977093.png" alt="1557363977093"></p>
+<p>可以看到，<strong>采用旋转操作使B+树减少了一次页的拆分操作</strong>，而这时B+树的高度依然还是2。</p>
+<h4 id="（3）B-树的删除操作"><a href="#（3）B-树的删除操作" class="headerlink" title="（3）B+树的删除操作"></a>（3）B+树的删除操作</h4><p>​    B+树使用填充因子（fill factor）来控制树的删除变化，<strong>50%是填充因子可设的最小值。B+树的删除操作同样必须保证删除后叶节点中的记录依然排序。</strong></p>
+<p>​    B+树的删除操作同样需要考虑如表5-2所示的三种情况，与插入不同的是，删除根据填充因子的变化来衡量。</p>
+<table>
+<thead>
+<tr>
+<th>叶子节点小于填充因子</th>
+<th>中间节点小于填充节点</th>
+<th>操作</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>No</td>
+<td>No</td>
+<td>直接将记录从叶子节点删除，如果该节点还是Index Page的节点，用该节点的右节点代替。</td>
+</tr>
+<tr>
+<td>Yes</td>
+<td>No</td>
+<td>合并叶子节点和它的兄弟节点，同时更新Index Page</td>
+</tr>
+<tr>
+<td>Yes</td>
+<td>Yes</td>
+<td>1)         合并叶子节点和它的兄弟节点                                                                                2)         更新Index Page                                                                                                               3)         合并Index Page 和它的兄弟节点</td>
+</tr>
+</tbody>
+</table>
+<h5 id="操作一：-1"><a href="#操作一：-1" class="headerlink" title="操作一："></a><strong>操作一：</strong></h5><p>​    <img src="C:\Users\liuquan\AppData\Roaming\Typora\typora-user-images\1557365613000.png" alt="1557365613000"></p>
+<p>​                        从上图删除70这个节点得到</p>
+<p><img src="C:\Users\liuquan\AppData\Roaming\Typora\typora-user-images\1557365632763.png" alt="1557365632763"></p>
+<h5 id="操作二："><a href="#操作二：" class="headerlink" title="操作二："></a><strong>操作二：</strong></h5><p>​    接着我们删除键值为25的记录，这也是表5-2讨论的第一种情况，但是该值还是Index Page中的值，因此在删除LeafPage中25的值后，还应将25的右兄弟节点的28更新到Page Index中，最后可得到图</p>
+<p>​    <img src="C:\Users\liuquan\AppData\Roaming\Typora\typora-user-images\1557365661267.png" alt="1557365661267"></p>
+<h5 id="操作三：-1"><a href="#操作三：-1" class="headerlink" title="操作三："></a><strong>操作三：</strong></h5><p>​    删除键值为60的情况，删除LeafPage中键值为60的记录后，填充因子小于50%，这时需要做合并操作，同样，在删除Index Page中相关记录后需要做Index Page的合并操作。</p>
+<p><img src="C:\Users\liuquan\AppData\Roaming\Typora\typora-user-images\1557365692269.png" alt="1557365692269"></p>
+<hr>
+<p>​    <strong>备注：什么是填充因子？</strong></p>
+<blockquote>
+<p>设置数据要占用page空间的比例。比如设置70%，即数据至少要填充page空间的70%。</p>
+<p>设置填充因子的主要作用是为新数据预留一定的空间，当有新数据时，可以插入到预留的空间里，从而避免分页的发生。</p>
+</blockquote>
+<p>​    值为   100   时表示页将填满，所留出的存储空间量最小。只有当不会对数据进行更改时<strong>（例如，在只读表中）</strong>才会使用此设置。值越小则数据页上的空闲空间越大，这样可以减少在索引增长过程中对数据页进行拆分的需要，但需要更多的存储空间。当表中数据会发生更改时，这种设置更为适当。</p>
+<p>​    <strong>填充因子越大,意味着一个索引页包含的索引记录越多,空闲空间越小。</strong></p>
+<p>​    一般来说查询的效率越高,因为这样查询的时候,可以减少读取索引页的工作量和减少内存使用  <strong>但这样导致的结果是数据变动导致的索引维护的工作量增加。</strong>因为索引页的空闲空间小,如果不能在本页内完成索引调整,就会引起调整其他索引页   </p>
+<p>​    当索引被新建立时，会根据填充因子的设置，对page页进行数据填充，使其达到设置的比例值。例如：设置70%的填充因子，mysql会在page中填充占用70%的page空间的记录，预留30%的空闲空间。</p>
+<p>​    <strong>填充因子只在新建索引及page分裂时，预留空间，保持设置的比例</strong>。<strong>在之后的插入，修改，更新操作时，不再维持这个比例</strong>。<strong>因为如果维持这个比例，就会造成频繁的分页操作，这就违背了设置填充因子的初衷</strong>—-为以后新插入的数据预留空间，降低page分裂的操作。</p>
+<p>​    mysql会在page分裂后，判断page中的数据，<strong>如果记录占用的比例小于设置的值（如70%），则会把这个page中的数据移动到其它的page</strong></p>
+<p>​      <strong>所以一般的选择是,数据基本不变化的（例如OLAP的场景，数据只用来分析的）,将填充因子设置到足够大,数据经常变化的（例如OLTP的场景）,将填充因子设置为足够小</strong></p>
+<h3 id="二-B-树索引的分类"><a href="#二-B-树索引的分类" class="headerlink" title="二.  B+树索引的分类"></a>二.  B+树索引的分类</h3><p>​    之前我们讨论的是B+树的数据结构和其操作，<strong>B+树索引的本质就是B+树在数据库中的实现。</strong></p>
+<p>​    B+树索引在数据库中有<strong>一个特点就是高扇出性</strong> ——  <strong>一般在DB中B+树的高度在2-3层左右。也就意味着只需要2-3次的IO操作即可。而现在的磁盘每秒差不多在100次IO左右，2-3次意味着查询时间只0.02-0.03秒</strong>。</p>
+<p>​       B+树索引可以分为</p>
+<ul>
+<li><strong>聚集索引</strong></li>
+<li><strong>辅助索引（有时也称非聚集索引）</strong></li>
+</ul>
+<p>​    但是不管是哪一种，其<strong>内部都是B+树的数据结构，高度平衡的，叶子节点存放着所有的数据。聚集索引和辅助索引不同的是：叶子节点存放的是否是一整行的信息。</strong></p>
+<h4 id="（1）聚集索引"><a href="#（1）聚集索引" class="headerlink" title="（1）聚集索引"></a>（1）聚集索引</h4><h5 id="概述："><a href="#概述：" class="headerlink" title="概述："></a>概述：</h5><p>​    InnoDB存储引擎是<strong>索引组织表</strong>，<strong>即表中的数据按照主键顺序存放。而聚集索引就是按照每张表的主键构造一颗B+树，同时叶子节点中存放的即为整张表的行记录数据，也将聚集索引的叶子节点称为数据页。</strong></p>
+<p>​    聚集索引的这个特性决定了索引组织表中数据也是索引的一部分，每个数据页都通过一个双向链表来进行链接。<strong>实际的数据页只能按照一颗B+树来进行排序，因此每张表只能拥有一个聚集索引。</strong></p>
+<p>​    <strong>多数情况下，查询优化器倾向采用聚集索引，原因如下：</strong></p>
+<ol>
+<li>聚集索引能够在B+树索引的叶子节点直接查找到数据。</li>
+<li>由于定义了数据的逻辑顺序，聚集索引能够特别快地访问针对范围值的查询（查询优化器能够快速地发现某一范围的数据页需要扫描）</li>
+</ol>
+<h5 id="实例："><a href="#实例：" class="headerlink" title="实例："></a>实例：</h5><p>​    下面来看一个B+树的实例，<strong>可以发现数据页上的存放的是完整的每行的记录，而在非数据页的索引页中，存放的仅仅是健值及指向数据页的偏移量，而不是一个完整的行记录，请留意下图</strong></p>
+<p><img src="C:\Users\liuquan\AppData\Roaming\Typora\typora-user-images\1557367441177.png" alt="1557367441177"></p>
+<p>​    很多数据库文档告诉大家。聚集索引按照顺序物理地存放数据。但试想一下，如果必须按照特定的顺序去存放一个物理记录，维护的成本就会十分高。<strong>所以聚集索引的存储并不是在物理上连续的，而是在逻辑上连续的，主要有两点：</strong></p>
+<ol>
+<li>页通过双向链表链接，页按照主键的顺序排序；</li>
+<li>每个页里面的记录（不止一条记录，上看上图）也是通过双向链表进行维护的，物理存储上可以同样不按照主键顺序存储。</li>
+</ol>
+<h5 id="聚集索引的好处："><a href="#聚集索引的好处：" class="headerlink" title="聚集索引的好处："></a><strong>聚集索引的好处：</strong></h5><ol>
+<li>它对于主键的排序查找和范围查找速度非常快。</li>
+<li>比如要查找注册表里最后的10位用户，由于索引是双向链表，用户可以快速地找到最后一个页，并取出10条记录<strong>（排序查找）</strong></li>
+<li>范围查找，如果要查找主键某个范围内的数据，通过叶子节点的上层中间节点就可以得到页的范围，之后直接读取数据页<strong>（范围查找）</strong></li>
+</ol>
+<p>​    <strong>备注：</strong>什么是索引组织表？</p>
+<p>​    表是根据主键顺序组织存放的，这种存储方式叫做索引组织表，因此找到索引，就等于找到了行数据。</p>
+<p>​    堆组织表的数据是散放的，索引和表的数据是分离的</p>
+<h4 id="（2）辅助索引"><a href="#（2）辅助索引" class="headerlink" title="（2）辅助索引"></a>（2）辅助索引</h4><p>​    对于辅助索引来说，叶子节点并不包含行记录的全部数据。叶子节点除了包含键值对之外，每个叶子节点中的索引行还包含了一个<strong>书签——用来告诉InnoDB存储引擎哪里可以找到与索引相对应的行数据。</strong></p>
+<h5 id="辅助索引的叶子节点包含"><a href="#辅助索引的叶子节点包含" class="headerlink" title="辅助索引的叶子节点包含"></a><strong>辅助索引的叶子节点包含</strong></h5><ul>
+<li>键值对</li>
+<li>书签</li>
+</ul>
+<p>​    由于InnoDB存储引擎是索引组织表，因此InnoDB存储引擎的辅助索引的<strong>书签就是相对应行数据的聚集索引键</strong>。</p>
+<p>​    <strong>辅助索引的存在并不影响数据在聚集索引中的组织，因此每张表上可以有多个辅助索引</strong>。</p>
+<p>​    当通过辅助索引来寻找数据时，Innodb存储引擎<strong>会遍历辅助索引并通过叶级别的指针获得指向主键索引的主键，然后再通过主键索引来找到一个完整的行记录。</strong></p>
+<h5 id="举一个例子："><a href="#举一个例子：" class="headerlink" title="举一个例子："></a>举一个例子：</h5><p>​    如果聚集索引树的高度同样为3，那么还需要对聚集索引树进行3次查找，最终找到一个完整的行数据所在的页。因此一共需要6次逻辑IO访问以得到最终的一个数据页。</p>
+<p>​    <img src="C:\Users\liuquan\AppData\Roaming\Typora\typora-user-images\1557369175531.png" alt="1557369175531"></p>
+<h4 id="（3）为什么有了聚集索引还需要辅助索引？"><a href="#（3）为什么有了聚集索引还需要辅助索引？" class="headerlink" title="（3）为什么有了聚集索引还需要辅助索引？"></a>（3）为什么有了聚集索引还需要辅助索引？</h4><p>即InnoDB 的辅助索引叶子节点为什么不直接保存的记录地址而要存主键键值？</p>
+<blockquote>
+<p>ps：想到的一个可能原因是 update 非索引列时，不需要更新辅助索引页，不知道还有没有其它原因？</p>
+<p>（1）<br>本身innodb是以主键为主排序的表。。所以对于innodb来讲，其在磁盘的排序已经由主键的顺序定了，不能再按其它健排序。</p>
+<p>其实辅助索引只要主键也有它的优点：一个磁盘块能存储更多的键值，使其在进行索引查找是，只需要读取相对少量的磁盘块就能扫描完全表，加之读到主键，再查询记录是比较快的。</p>
+<p>根本原因是INNODB是主键的索引组织表，其物理存储已经由主键决定，不能再改变在磁盘中的存储顺序。</p>
+<p>（2）<br>“一个磁盘块能存储更多的键值”<br>这个未必吧，还得取决于主键和地址的大小，地址一般由 文件号+块号+块内偏移组成，大概10个字节<br>不过也可以作为一个考虑因素，谢谢你的回复</p>
+<p>（3）</p>
+<p>个人也觉得是跟DML有关，当对一个innodb表进行大量DML后，B+树会分裂，同一行记录的页地址会发生变化。<br>由于辅助索引记录的是主键值，因此完全不用理会这个变化，如果辅助索引记录的是实际页地址，那DML一旦引起B+树分裂，还得与辅助索引进行同步。</p>
+</blockquote>
+<h3 id="三-B-树索引的分裂"><a href="#三-B-树索引的分裂" class="headerlink" title="三. B+树索引的分裂"></a>三. B+树索引的分裂</h3><h4 id="（1）B-树的分裂："><a href="#（1）B-树的分裂：" class="headerlink" title="（1）B+树的分裂："></a>（1）B+树的分裂：</h4><p>​    B+树的分裂不同于B+树索引的分裂，B+树索引页的分裂并不总是从页的中间记录开始，<strong>若按照之前B+树的分裂方法，这可能会导致页空间的浪费</strong>，下面来看一个B+树分裂的例子：</p>
+<blockquote>
+<p>1，2，3，4，5，6，7，8，9  插入 10这个记录，插入是根据自增顺序来进行的，如果插入10这条记录之后需要进行页的分裂操作。</p>
+<p>那么根据B+树的分裂方式，将会把5作为分裂点记录，分裂后得到下面两个页</p>
+<p>P1: 1 , 2 , 3 , 4</p>
+<p>P2: 5 , 6 , 7 , 8 , 9,  10</p>
+<p>由于插入是顺序的，P1这个页不会有其他记录插入，所以会有空间的浪费，而P2会再次分页。</p>
+</blockquote>
+<h4 id="（2）B-树索引分裂需要的插入的记录顺序信息："><a href="#（2）B-树索引分裂需要的插入的记录顺序信息：" class="headerlink" title="（2）B+树索引分裂需要的插入的记录顺序信息："></a>（2）B+树索引分裂需要的插入的记录顺序信息：</h4><p><strong>InnoDB存储引擎的Page Header中有以下几个部分来保存插入的顺序信息</strong></p>
+<ol>
+<li>PAGE_LAST_INSERT</li>
+<li>PAGE_DIRECTION</li>
+<li>PAGE_N_DIRECTION</li>
+</ol>
+<p>通过这些信息, <strong>InnoDB存储引擎可以决定是向左还是向右进行分裂,同时决定将分裂点记录为哪一个</strong></p>
+<ol>
+<li>若插入是随机的,则取页的中间记录作为分裂点的记录,这和之前介绍的相同。</li>
+<li>若往同一方向进行插入的记录数量为5,并且目前已经定位( cursor)到的记录 <strong>( InnoDB存储引擎插入时,首先需要进行定位,定位到的记录为待插人记录的前条记录)</strong> 之后还有3条记录,则分裂点的记录为定位到的记录后的第三条记录,否则分裂点记录就是待插入的记录。</li>
+</ol>
+<p>备注：<strong>插入随机就是说不按照主键的自增顺序进行插入，如果插入不随机就是按照某一方向进行插入，即按照主键自增或者自减</strong></p>
+<h4 id="（3）B-数索引分裂的例子"><a href="#（3）B-数索引分裂的例子" class="headerlink" title="（3）B+数索引分裂的例子"></a>（3）B+数索引分裂的例子</h4><h5 id="1-分裂点为定位记录后的第三条记录的情况"><a href="#1-分裂点为定位记录后的第三条记录的情况" class="headerlink" title="1. 分裂点为定位记录后的第三条记录的情况"></a><strong>1. 分裂点为定位记录后的第三条记录的情况</strong></h5><p><img src="C:\Users\liuquan\AppData\Roaming\Typora\typora-user-images\1557396918773.png" alt="1557396918773"></p>
+<p>​    向右分裂且定位到的记录之后还有3条记录, split record为分裂点记录最终向右分裂得到下图</p>
+<p><img src="C:\Users\liuquan\AppData\Roaming\Typora\typora-user-images\1557396946371.png" alt="1557396946371"></p>
+<h5 id="2-分裂点就是插入记录本身（这在自增插入时是普遍存在的一种情况）"><a href="#2-分裂点就是插入记录本身（这在自增插入时是普遍存在的一种情况）" class="headerlink" title="2.分裂点就是插入记录本身（这在自增插入时是普遍存在的一种情况）"></a><strong>2.分裂点就是插入记录本身（</strong>这在自增插入时是普遍存在的一种情况）</h5><p><img src="C:\Users\liuquan\AppData\Roaming\Typora\typora-user-images\1557396979534.png" alt="1557396979534"></p>
+<h4 id="（4）索引管理"><a href="#（4）索引管理" class="headerlink" title="（4）索引管理"></a>（4）索引管理</h4><h5 id="1-几种命令："><a href="#1-几种命令：" class="headerlink" title="1. 几种命令："></a>1. 几种命令：</h5><ul>
+<li>索引的创建和删除可通过两种方法，<strong>ALTER TABLE 另一种是CREATE/DROP INDEX</strong></li>
+<li>用户可以设置<strong>对整个列的数据进行索引，也可以只索引一个列的开头部分数据</strong></li>
+<li>若用户想要查看索引，可以<strong>使用命令SHOW INDEX</strong></li>
+</ul>
+<p><img src="C:\Users\liuquan\AppData\Roaming\Typora\typora-user-images\1557403636692.png" alt="1557403636692"></p>
+<h5 id="2-快速索引创建-Fast-Index-Creation（仅适用于辅助索引）"><a href="#2-快速索引创建-Fast-Index-Creation（仅适用于辅助索引）" class="headerlink" title="2. 快速索引创建 Fast Index Creation（仅适用于辅助索引）"></a>2. 快速索引创建 Fast Index Creation（仅适用于辅助索引）</h5><p>MySQL 5.5版本之前（不包含5.5）一个很大的问题就是说：</p>
+<p>对于索引的添加或者删除这类的DDL操作，MySQL数据库的操作过程为：</p>
+<ol>
+<li>首先创建一张新的临时表，表结构为通过命令ALERT TABLE新定义的结构。</li>
+<li>然后把原表中数据导入到临时表</li>
+<li>接着删除原表。</li>
+<li>最后把临时表重命名为原来的表名</li>
+</ol>
+<p><strong>缺点：</strong></p>
+<ol>
+<li>可以发现，若用<strong>对于一张大表进行索引的添加和删除操作，那么这会需要很长时间。</strong></li>
+<li>更关键的是，若有<strong>大量事务需要访问正在被修改的表，这意味着数据库服务不可用。</strong></li>
+</ol>
+<p><strong>改进：</strong></p>
+<p>InnoDB存储引擎从InnoDB 1.0.x版本开始支持一种称为Fast Index Creation（快速索引创建）的索引创建方式——简称FIC。</p>
+<ol>
+<li>对于<strong>辅助索引的创建，InnoDB存储引擎会对创建索引的表加上一个S锁。在创建的过程中，不需要重建表</strong>，因此速度较之前提高了很多，并且数据库的可用性也得到了提高。</li>
+<li><strong>删除辅助索引操作就更简单了，InnoDB存储引擎只需更新内部视图，并将辅助索引的空间标记为可用，同时删除MySQL数据库内部视图上对该表的索引定义</strong>即可（这里需要特别注意的是，临时表的创建路径是通过参数tmpdir进行设置得。用户必须保证tmpdir有足够的空间可以存放临时表，否则会导致创建索引失败 )</li>
+<li>由于FIC在索引的创建过程中对表加上了S锁，<strong>因此在创建的过程中只能对该表进行读操作，若有大量的事务需要对目标表进行写操作，那么数据库的服务同样不可用</strong>。</li>
+<li>此外，<strong>FIC方式只限定于辅助索引，对于主键的创建和删除同样需要重建一张表</strong>。</li>
+</ol>
+<h3 id="四-Cardinality值"><a href="#四-Cardinality值" class="headerlink" title="四. Cardinality值"></a>四. Cardinality值</h3><p>​    Cardinality值它十分关键，<strong>优化器会根据它的值来决定是否使用索引，但是这个值不是实时更新的</strong>，就是说并非每次索引的更新都会更新该值，这样的代价很大。因此这个值不会很准确，是一个大概的值。比如SHOW INDEX命令的上图显示，该值为2，有两条记录，但是实际上拥有4条记录。</p>
+<p>​       <strong>可以使用ANALYZE TABLE命令来更新该值。</strong></p>
+<p>​       <strong>当它为NULL的时候可能会发生索引建立了，但是还没有被使用到。或者对两条基本一样的语句进行EXPLAIN，但是最后结果却不一样；一个使用索引，另一个使用全表扫描。</strong></p>
+<p>​       <strong>解决方法之一就是：在一个非高峰的时间，去对几个核心表进行ANALYZE TABLE操作！！！</strong></p>
+<p>先看看两个概念：高选择性和低选择性</p>
+<h4 id="（1）低选择性："><a href="#（1）低选择性：" class="headerlink" title="（1）低选择性："></a>（1）低选择性：</h4><p>​    按性别进行查询时，可取值的范围一般只有’M’、’F’。因此上述 SQL 语句得到的结果可能是该表 50% 的数据（假设男女比例 1 : 1), 这时添加 B + 树索引是完全没有必要的。对于性别字段，地区字段、类型字段，它们可取值的范围很小。</p>
+<h4 id="（2）高选择性："><a href="#（2）高选择性：" class="headerlink" title="（2）高选择性："></a>（2）高选择性：</h4><p>​    如果某个字段的取值范围很广，几乎没有重复，即属于高选择性，则此时使用 B + 树索引是最适合的。例如，对于姓名字段，基本上在一个应用中不允许重名的出现。</p>
+<p>​        <strong>Cardinality值非常关键，表示索引中不重复记录数量的预估值</strong></p>
+<h4 id="（3）判断索引是否是高选择性"><a href="#（3）判断索引是否是高选择性" class="headerlink" title="（3）判断索引是否是高选择性"></a>（3）判断索引是否是高选择性</h4><p>​    <strong>查看Cardinality，可以通过 SHOW INDEX 结果中的列 Cardinality 来观察。</strong></p>
+<p>​    如果非常小，那么用户需要考虑是否还有必要创建这个索引。<strong>故在访问高选择性属性的字段并从表中取出很少一部分数据时，对这个字段添加 B + 树索引是非常有必要的。</strong></p>
+<h4 id="（4）InnoDB存储引擎下Cardinality的统计"><a href="#（4）InnoDB存储引擎下Cardinality的统计" class="headerlink" title="（4）InnoDB存储引擎下Cardinality的统计"></a>（4）InnoDB存储引擎下Cardinality的统计</h4><p>​    因为 MySQL 数据库中有各种不同的存储引擎， <strong>而每种存储引擎对于 B + 树索引的实现又各不相同， 所以对 Cardinality 的统计是放在存储 引擎层进行的。数据库于 Cardinality 的统计都是通过采样 (Sample) 的方法来完成的。</strong>    </p>
+<h5 id="1-如果Cardinality的统计采用频繁更新的缺点："><a href="#1-如果Cardinality的统计采用频繁更新的缺点：" class="headerlink" title="1. 如果Cardinality的统计采用频繁更新的缺点："></a>1. 如果Cardinality的统计采用频繁更新的缺点：</h5><ol>
+<li>生产环境下，索引的更新可能是非常频繁的，每次索引发生操作的时候，进行更新Cardinality，会带来很大的负担。</li>
+<li>一个表的数据很大，统计一次Cardinality的时间就要很长，在生产环境下也不能接受。</li>
+</ol>
+<h5 id="2-InnoDB引擎中采取的策略"><a href="#2-InnoDB引擎中采取的策略" class="headerlink" title="2. InnoDB引擎中采取的策略"></a>2. InnoDB引擎中采取的策略</h5><p>​    <strong>统计Cardinality信息的更新发生在两个操作下，Insert和Update，引擎内部采取的策略就是</strong></p>
+<ol>
+<li>表中 1/16 的数据已发生过变化。</li>
+<li>stat_modified_counter&gt;2 000 000 000。（某一行数据进行频繁地更新）</li>
+</ol>
+<p>第一种策略为自从上次统计 Cardinality 信息后， 表中 1/16 的数据已经发生过变化，这时需要更新 Cardinality 信息。</p>
+<p>​    第二种情况考虑的是， 如果对表中某一行数据频繁地进行更新操作， 这时表中的数据实际并没有增加， 实际发生变化的还是这一行数据， 则第一种更新策略就无法适用这这种情况。</p>
+<p>​     <strong>故在 InnoDB 存储引擎内部有一个计数器 stat_ modified_ counter, 用来表示发生变化的次数</strong>，当 stat_modified_ counter 大于 2 000 000 00时。则同样需要更新 Cardinality 信息。</p>
+<h4 id="（5）引擎内部进行-Cardinality-信息的统计和更新操作的细节"><a href="#（5）引擎内部进行-Cardinality-信息的统计和更新操作的细节" class="headerlink" title="（5）引擎内部进行 Cardinality 信息的统计和更新操作的细节"></a>（5）引擎内部进行 Cardinality 信息的统计和更新操作的细节</h4><ol>
+<li><strong>取得 B + 树索引中叶子节点的数量， 记为 A。</strong></li>
+<li><strong>随机取得 B + 树索引中的 8 个叶子节点。 统计每个页不同记录的个数， 即为 P1,P2, …，P8。</strong></li>
+<li><strong>根据采样信息给出 Cardinality 的预估值：Cardinality= (Pl+ P2+…+P8) *A/8。</strong></li>
+</ol>
+<p>​    在InnoDB存储引擎中，Cardinality值是通过对8个叶子节点预估而得的，不是一个实际精确的值。</p>
+<p>​       再者，每次对Cardinality值的统计，都是通过随机取8个叶子节点得到的，这同时又暗示了另一个Cardinality现象，<strong>即每次得到的Cardinality值可能是不同的</strong>。<strong>（当值不变的时候，可能是表足够小，叶子节点小于或者等于8）</strong></p>
+<h3 id="五-存在的疑问："><a href="#五-存在的疑问：" class="headerlink" title="五. 存在的疑问："></a>五. 存在的疑问：</h3><p>在B+树里面，何为扇出？</p>
+<h3 id="六-参考资料"><a href="#六-参考资料" class="headerlink" title="六. 参考资料"></a>六. 参考资料</h3><p><a href="http://bbs.chinaunix.net/thread-4160136-1-1.html" target="_blank" rel="noopener">http://bbs.chinaunix.net/thread-4160136-1-1.html</a></p>
+<p><a href="http://www.cnblogs.com/chenxizhang/archive/2008/08/17/1269682.html" target="_blank" rel="noopener">http://www.cnblogs.com/chenxizhang/archive/2008/08/17/1269682.html</a></p>
+<p><a href="https://www.gagahappy.com/mysql-fillfactor/" target="_blank" rel="noopener">https://www.gagahappy.com/mysql-fillfactor/</a></p>
+<p><a href="https://segmentfault.com/a/1190000018156669" target="_blank" rel="noopener">https://segmentfault.com/a/1190000018156669</a></p>
+<p><a href="https://blog.csdn.net/moakun/article/details/81813994" target="_blank" rel="noopener">https://blog.csdn.net/moakun/article/details/81813994</a></p>
+<p><a href="https://blog.csdn.net/jhgdike/article/details/60579883" target="_blank" rel="noopener">https://blog.csdn.net/jhgdike/article/details/60579883</a></p>
+<p><a href="https://www.cnblogs.com/shenyixin/p/9957872.html" target="_blank" rel="noopener">https://www.cnblogs.com/shenyixin/p/9957872.html</a></p>
+<p>《Mysql技术内幕——InnoDB引擎》—— 姜承尧</p>
+<p>​    </p>
+</the></excerpt>
+      
+      
+    </div>
+    
+  </div>
+  
+    
+    <div class="copyright">
+        <p><span>本文标题:</span><a href="/2019/04/26/Mysql技术内幕-索引(二)/">Mysql之InnoDB的索引（二）</a></p>
+        <p><span>文章作者:</span><a href="/" title="访问 Whits 的个人博客">Whits</a></p>
+        <p><span>发布时间:</span>2019年04月26日 - 19时53分</p>
+        <p><span>最后更新:</span>2019年05月10日 - 15时13分</p>
+        <p>
+            <span>原始链接:</span><a class="post-url" href="/2019/04/26/Mysql技术内幕-索引(二)/" title="Mysql之InnoDB的索引（二）">http://yoursite.com/2019/04/26/Mysql技术内幕-索引(二)/</a>
+            <span class="copy-path" data-clipboard-text="原文: http://yoursite.com/2019/04/26/Mysql技术内幕-索引(二)/　　作者: Whits" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <script src="/js/clipboard.min.js"></script>
+            <script> var clipboard = new Clipboard('.copy-path'); </script>
+        </p>
+        <p>
+            <span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/3.0/cn/" title="中国大陆 (CC BY-NC-SA 3.0 CN)" target="_blank">"署名-非商用-相同方式共享 3.0"</a> 转载请保留原文链接及作者。
+        </p>
+    </div>
+
+
+
+<nav id="article-nav">
+  
+    <a href="/2019/05/09/Mysql数据库中的主键详解/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption"><</strong>
+      <div class="article-nav-title">
+        
+          (no title)
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2019/04/23/Mysql技术内幕-索引(一)/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">Mysql之InnoDB的索引（一）</div>
+      <strong class="article-nav-caption">></strong>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+    <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#一-B-树的定义及插入删除操作"><span class="toc-number">1.</span> <span class="toc-text">一. B+树的定义及插入删除操作</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#（1）B-树的定义"><span class="toc-number">1.1.</span> <span class="toc-text">（1）B+树的定义</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#（2）B-树的插入操作"><span class="toc-number">1.2.</span> <span class="toc-text">（2）B+树的插入操作</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#操作一："><span class="toc-number">1.2.1.</span> <span class="toc-text">操作一：</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#操作二"><span class="toc-number">1.2.2.</span> <span class="toc-text">操作二:</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#操作三："><span class="toc-number">1.2.3.</span> <span class="toc-text">操作三：</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#小结："><span class="toc-number">1.2.4.</span> <span class="toc-text">小结：</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#（3）B-树的删除操作"><span class="toc-number">1.3.</span> <span class="toc-text">（3）B+树的删除操作</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#操作一：-1"><span class="toc-number">1.3.1.</span> <span class="toc-text">操作一：</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#操作二："><span class="toc-number">1.3.2.</span> <span class="toc-text">操作二：</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#操作三：-1"><span class="toc-number">1.3.3.</span> <span class="toc-text">操作三：</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#二-B-树索引的分类"><span class="toc-number">2.</span> <span class="toc-text">二.  B+树索引的分类</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#（1）聚集索引"><span class="toc-number">2.1.</span> <span class="toc-text">（1）聚集索引</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#概述："><span class="toc-number">2.1.1.</span> <span class="toc-text">概述：</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#实例："><span class="toc-number">2.1.2.</span> <span class="toc-text">实例：</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#聚集索引的好处："><span class="toc-number">2.1.3.</span> <span class="toc-text">聚集索引的好处：</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#（2）辅助索引"><span class="toc-number">2.2.</span> <span class="toc-text">（2）辅助索引</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#辅助索引的叶子节点包含"><span class="toc-number">2.2.1.</span> <span class="toc-text">辅助索引的叶子节点包含</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#举一个例子："><span class="toc-number">2.2.2.</span> <span class="toc-text">举一个例子：</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#（3）为什么有了聚集索引还需要辅助索引？"><span class="toc-number">2.3.</span> <span class="toc-text">（3）为什么有了聚集索引还需要辅助索引？</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#三-B-树索引的分裂"><span class="toc-number">3.</span> <span class="toc-text">三. B+树索引的分裂</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#（1）B-树的分裂："><span class="toc-number">3.1.</span> <span class="toc-text">（1）B+树的分裂：</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#（2）B-树索引分裂需要的插入的记录顺序信息："><span class="toc-number">3.2.</span> <span class="toc-text">（2）B+树索引分裂需要的插入的记录顺序信息：</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#（3）B-数索引分裂的例子"><span class="toc-number">3.3.</span> <span class="toc-text">（3）B+数索引分裂的例子</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#1-分裂点为定位记录后的第三条记录的情况"><span class="toc-number">3.3.1.</span> <span class="toc-text">1. 分裂点为定位记录后的第三条记录的情况</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#2-分裂点就是插入记录本身（这在自增插入时是普遍存在的一种情况）"><span class="toc-number">3.3.2.</span> <span class="toc-text">2.分裂点就是插入记录本身（这在自增插入时是普遍存在的一种情况）</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#（4）索引管理"><span class="toc-number">3.4.</span> <span class="toc-text">（4）索引管理</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#1-几种命令："><span class="toc-number">3.4.1.</span> <span class="toc-text">1. 几种命令：</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#2-快速索引创建-Fast-Index-Creation（仅适用于辅助索引）"><span class="toc-number">3.4.2.</span> <span class="toc-text">2. 快速索引创建 Fast Index Creation（仅适用于辅助索引）</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#四-Cardinality值"><span class="toc-number">4.</span> <span class="toc-text">四. Cardinality值</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#（1）低选择性："><span class="toc-number">4.1.</span> <span class="toc-text">（1）低选择性：</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#（2）高选择性："><span class="toc-number">4.2.</span> <span class="toc-text">（2）高选择性：</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#（3）判断索引是否是高选择性"><span class="toc-number">4.3.</span> <span class="toc-text">（3）判断索引是否是高选择性</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#（4）InnoDB存储引擎下Cardinality的统计"><span class="toc-number">4.4.</span> <span class="toc-text">（4）InnoDB存储引擎下Cardinality的统计</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#1-如果Cardinality的统计采用频繁更新的缺点："><span class="toc-number">4.4.1.</span> <span class="toc-text">1. 如果Cardinality的统计采用频繁更新的缺点：</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#2-InnoDB引擎中采取的策略"><span class="toc-number">4.4.2.</span> <span class="toc-text">2. InnoDB引擎中采取的策略</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#（5）引擎内部进行-Cardinality-信息的统计和更新操作的细节"><span class="toc-number">4.5.</span> <span class="toc-text">（5）引擎内部进行 Cardinality 信息的统计和更新操作的细节</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#五-存在的疑问："><span class="toc-number">5.</span> <span class="toc-text">五. 存在的疑问：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#六-参考资料"><span class="toc-number">6.</span> <span class="toc-text">六. 参考资料</span></a></li></ol>
+</div>
+<input type="button" id="tocButton" value="隐藏目录" title="点击按钮隐藏或者显示文章目录">
+
+<script src="https://7.url.cn/edu/jslib/comb/require-2.1.6,jquery-1.9.1.min.js"></script>
+<script>
+    var valueHide = "隐藏目录";
+    var valueShow = "显示目录";
+
+    if ($(".left-col").is(":hidden")) {
+        $("#tocButton").attr("value", valueShow);
+    }
+    $("#tocButton").click(function() {
+        if ($("#toc").is(":hidden")) {
+            $("#tocButton").attr("value", valueHide);
+            $("#toc").slideDown(320);
+        }
+        else {
+            $("#tocButton").attr("value", valueShow);
+            $("#toc").slideUp(350);
+        }
+    })
+    if ($(".toc").length < 1) {
+        $("#toc, #tocButton").hide();
+    }
+</script>
+
+
+
+
+
+<div class="bdsharebuttonbox">
+	<a href="#" class="fx fa-weibo bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+	<a href="#" class="fx fa-weixin bds_weixin" data-cmd="weixin" title="分享到微信"></a>
+	<a href="#" class="fx fa-qq bds_sqq" data-cmd="sqq" title="分享到QQ好友"></a>
+	<a href="#" class="fx fa-facebook-official bds_fbook" data-cmd="fbook" title="分享到Facebook"></a>
+	<a href="#" class="fx fa-twitter bds_twi" data-cmd="twi" title="分享到Twitter"></a>
+	<a href="#" class="fx fa-linkedin bds_linkedin" data-cmd="linkedin" title="分享到linkedin"></a>
+	<a href="#" class="fx fa-files-o bds_copy" data-cmd="copy" title="分享到复制网址"></a>
+</div>
+<script>window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"2","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];</script>
+
+
+
+
+    
+
+
+
+    <div class="scroll" id="post-nav-button">
+        
+            <a href="/2019/05/09/Mysql数据库中的主键详解/" title="上一篇: ">
+                <i class="fa fa-angle-left"></i>
+            </a>
+        
+        <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
+        
+            <a href="/2019/04/23/Mysql技术内幕-索引(一)/" title="下一篇: Mysql之InnoDB的索引（一）">
+                <i class="fa fa-angle-right"></i>
+            </a>
+        
+    </div>
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019/05/09/实现RSA加密，解密，签名/">实现RSA加密，解密，签名</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/09/Mysql数据库中的主键详解/">Mysql数据库中的主键详解</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/26/Mysql技术内幕-索引(二)/">Mysql之InnoDB的索引（二）</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/23/Mysql技术内幕-索引(一)/">Mysql之InnoDB的索引（一）</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/23/一条SQL语句的执行流程/">SQL语句的执行流程</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/17/Java运行期优化(二)/">Java晚期(运行期)优化(二)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/14/Java运行期优化(一)/">Java晚期(运行期)优化(一)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/06/Java编译期优化/">Java早期(编译期)优化</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/23/String源码剖析/">String部分源码剖析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/15/Object源码剖析/">Object源码剖析（顺带分析了notify/wait）</a></li></ul>
+    <script src="https://7.url.cn/edu/jslib/comb/require-2.1.6,jquery-1.9.1.min.js"></script>
+    <script>
+        $(".post-list").addClass("toc-article");
+        $(".post-list-item a").attr("target","_blank");
+        $("#post-nav-button > a:nth-child(2)").click(function() {
+            $(".fa-bars, .fa-times").toggle();
+            $(".post-list").toggle(300);
+            if ($(".toc").length > 0) {
+                $("#toc, #tocButton").toggle(200, function() {
+                    if ($(".switch-area").is(":visible")) {
+                        $("#tocButton").attr("value", valueHide);
+                        }
+                    })
+            }
+            else {
+            }
+        })
+    </script>
+
+
+
+    <script>
+        
+    </script>
+</div>
+      <footer id="footer">
+    <div class="outer">
+        <div id="footer-info">
+            <div class="footer-left">
+                &copy; 2019 Whits
+            </div>
+            <div class="footer-right">
+                <a href="http://hexo.io/" target="_blank">Hexo</a>  Theme <a href="https://github.com/luuman/hexo-theme-spfk" target="_blank">spfk</a> by luuman
+            </div>
+        </div>
+        
+            <div class="visit">
+                
+                    <span id="busuanzi_container_site_pv" style="display:none">
+                        <span id="site-visit">到访数: 
+                            <span id="busuanzi_value_site_uv"></span>
+                        </span>
+                    </span>
+                
+                
+                    <span>, </span>
+                
+                
+                    <span id="busuanzi_container_page_pv" style="display:none">
+                        <span id="page-visit">本页阅读量: 
+                            <span id="busuanzi_value_page_pv"></span>
+                        </span>
+                    </span>
+                
+            </div>
+        
+    </div>
+</footer>
+
+    </div>
+    <script src="https://7.url.cn/edu/jslib/comb/require-2.1.6,jquery-1.9.1.min.js"></script>
+<script src="/js/main.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            var backgroundnum = 24;
+            var backgroundimg = "url(/background/bg-x.jpg)".replace(/x/gi, Math.ceil(Math.random() * backgroundnum));
+            $("#mobile-nav").css({"background-image": backgroundimg,"background-size": "cover","background-position": "center"});
+            $(".left-col").css({"background-image": backgroundimg,"background-size": "cover","background-position": "center"});
+        })
+    </script>
+
+
+
+
+
+<div class="scroll" id="scroll">
+    <a href="#"><i class="fa fa-arrow-up"></i></a>
+    <a href="#comments"><i class="fa fa-comments-o"></i></a>
+    <a href="#footer"><i class="fa fa-arrow-down"></i></a>
+</div>
+<script>
+    $(document).ready(function() {
+        if ($("#comments").length < 1) {
+            $("#scroll > a:nth-child(2)").hide();
+        };
+    })
+</script>
+
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+
+  <script language="javascript">
+    $(function() {
+        $("a[title]").each(function() {
+            var a = $(this);
+            var title = a.attr('title');
+            if (title == undefined || title == "") return;
+            a.data('title', title).removeAttr('title').hover(
+
+            function() {
+                var offset = a.offset();
+                $("<div id=\"anchortitlecontainer\"></div>").appendTo($("body")).html(title).css({
+                    top: offset.top - a.outerHeight() - 15,
+                    left: offset.left + a.outerWidth()/2 + 1
+                }).fadeIn(function() {
+                    var pop = $(this);
+                    setTimeout(function() {
+                        pop.remove();
+                    }, pop.text().length * 800);
+                });
+            }, function() {
+                $("#anchortitlecontainer").remove();
+            });
+        });
+    });
+</script>
+
+
+  </div>
+</body>
+</html>
