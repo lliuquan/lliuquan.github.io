@@ -3,20 +3,24 @@
 <head><meta name="generator" content="Hexo 3.8.0">
   <meta charset="utf-8">
   
-  <title>String部分源码剖析 | Whits&#39;s Blog</title>
+  <title>Whits&#39;s Blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="本文主要讲解了 JDK 下的String的部分源码，以及涉及到的String的一些相关知识点,比如，本文参考资料见文末">
-<meta name="keywords" content="String,源码">
+  <meta name="description" content="title: Https的加密流程date: 2019-05-25 15:57:35categories: “计算机网络” #分类tags:   #标签 ​        - Https ​    - 加密    本文主要讲解了Https的加密流程，如何生成密钥，以及对称性加密与非对称性加密的区别等">
 <meta property="og:type" content="article">
-<meta property="og:title" content="String部分源码剖析">
-<meta property="og:url" content="http://yoursite.com/2019/03/23/String源码剖析/index.html">
+<meta property="og:title" content="Whits&#39;s Blog">
+<meta property="og:url" content="http://yoursite.com/2019/06/11/HTTPS的加密流程/index.html">
 <meta property="og:site_name" content="Whits&#39;s Blog">
-<meta property="og:description" content="本文主要讲解了 JDK 下的String的部分源码，以及涉及到的String的一些相关知识点,比如，本文参考资料见文末">
+<meta property="og:description" content="title: Https的加密流程date: 2019-05-25 15:57:35categories: “计算机网络” #分类tags:   #标签 ​        - Https ​    - 加密    本文主要讲解了Https的加密流程，如何生成密钥，以及对称性加密与非对称性加密的区别等">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2019-05-08T09:17:10.023Z">
+<meta property="og:image" content="c:/Users/liuquan/Desktop/1534248048113307.png">
+<meta property="og:image" content="c:/Users/liuquan/Desktop/1534258161228233.png">
+<meta property="og:image" content="d:/软件/QQ数据记录/780101896/FileRecv/MobileFile/IMG_20190529_154722.jpg">
+<meta property="og:image" content="c:/Users/liuquan/Desktop/1534251965821525.png">
+<meta property="og:updated_time" content="2019-05-29T07:58:59.057Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="String部分源码剖析">
-<meta name="twitter:description" content="本文主要讲解了 JDK 下的String的部分源码，以及涉及到的String的一些相关知识点,比如，本文参考资料见文末">
+<meta name="twitter:title" content="Whits&#39;s Blog">
+<meta name="twitter:description" content="title: Https的加密流程date: 2019-05-25 15:57:35categories: “计算机网络” #分类tags:   #标签 ​        - Https ​    - 加密    本文主要讲解了Https的加密流程，如何生成密钥，以及对称性加密与非对称性加密的区别等">
+<meta name="twitter:image" content="c:/Users/liuquan/Desktop/1534248048113307.png">
   
     <link rel="alternative" href="/atom.xml" title="Whits&#39;s Blog" type="application/atom+xml">
   
@@ -228,11 +232,11 @@
         </header>                
     </div>
 </nav>
-      <div class="body-wrap"><article id="post-String源码剖析" class="article article-type-post" itemscope itemprop="blogPost">
+      <div class="body-wrap"><article id="post-HTTPS的加密流程" class="article article-type-post" itemscope itemprop="blogPost">
   
     <div class="article-meta">
-      <a href="/2019/03/23/String源码剖析/" class="article-date">
-      <time datetime="2019-03-23T01:53:16.000Z" itemprop="datePublished">2019-03-23</time>
+      <a href="/2019/06/11/HTTPS的加密流程/" class="article-date">
+      <time datetime="2019-06-11T07:55:59.754Z" itemprop="datePublished">2019-06-11</time>
 </a>
     </div>
   
@@ -241,87 +245,75 @@
       <input type="hidden" class="isFancy">
     
     
-      <header class="article-header">
-        
-  
-    <h1 class="article-title" itemprop="name">
-      String部分源码剖析
-    </h1>
-  
-
-      </header>
-      
-      <div class="article-info article-info-post">
-        
-    <div class="article-category tagcloud">
-    <a class="article-category-link" href="/categories/JDK源码/">JDK源码</a>
-    </div>
-
-
-        
-    <div class="article-tag tagcloud">
-        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/String/">String</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/源码/">源码</a></li></ul>
-    </div>
-
-        <div class="clearfix"></div>
-      </div>
-      
-    
     <div class="article-entry" itemprop="articleBody">
       
           
-        <excerpt in index | 首页摘要> 
+        <p>title: Https的加密流程<br>date: 2019-05-25 15:57:35<br>categories: “计算机网络” #分类<br>tags:   #标签</p>
+<p>​        - Https</p>
+<p>​    - 加密</p>
+<excerpt in index | 首页摘要> 
 
-<p>本文主要讲解了 JDK 下的String的部分源码，以及涉及到的String的一些相关知识点,比如，本文参考资料见文末<br><a id="more"></a></p>
+<p>本文主要讲解了Https的加密流程，如何生成密钥，以及对称性加密与非对称性加密的区别等</p>
+<a id="more"></a>
 <the rest of contents | 余下全文>
 
-<p>阅读该源码，所要具备的基础知识</p>
-<h4 id="1-字符集与字符编码"><a href="#1-字符集与字符编码" class="headerlink" title="1.字符集与字符编码"></a>1.字符集与字符编码</h4><p>​    计算机中储存的信息都是用二进制数表示的；而我们在屏幕上看到的英文、汉字等字符是二进制数转换之后的结果。通俗的说，按照何种规则将字符存储在计算机中，如’a’用什么表示，称为”编码”；</p>
-<p>​    反之，将存储在计算机中的二进制数解析显示出来，称为”解码”，如同密码学中的加密和解密。在解码过程中，如果使用了错误的解码规则，则导致’a’解析成’b’或者乱码。</p>
-<p>​    <strong>字符集（Charset）</strong>：是一个系统支持的所有抽象字符的集合。字符是各种文字和符号的总称，包括各国家文字、标点符号、图形符号、数字等。</p>
-<p>​    <strong>字符编码（Character Encoding）</strong>：是一套法则，使用该法则能够对自然语言的字符的一个集合（如字母表或音节表），与其他东西的一个集合（如号码或电脉冲）进行配对。</p>
-<p>​    即在符号集合与数字系统之间建立对应关系，它是信息处理的一项基本技术。通常人们用符号集合（一般情况下就是文字）来表达信息。而以计算机为基础的信息处理系统则是利用元件（硬件）不同状态的组合来存储和处理信息的。<strong>元件不同状态的组合能代表数字系统的数字，因此字符编码就是将符号转换为计算机可以接受的数字系统的数，称为数字代码。</strong></p>
-<h4 id="2-常用的字符集"><a href="#2-常用的字符集" class="headerlink" title="2.常用的字符集"></a><strong>2.常用的字符集</strong></h4><p>常见字符集名称：ASCII字符集、GB2312字符集、BIG5字符集、GB18030字符集、Unicode字符集等</p>
-<table>
-<thead>
-<tr>
-<th>字符集</th>
-<th>ASCII字符集</th>
-<th>Unicode字符集</th>
-<th><strong>GBXXXX字符集（GBK，</strong>GB2312…<strong>）</strong></th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>编码方式</td>
-<td><strong>ASCII编码</strong></td>
-<td><strong>UTF-32/ UTF-16/ UTF-8 三种方式</strong></td>
-<td><strong>相对应的GBXXXX编码</strong></td>
-</tr>
-</tbody>
-</table>
-<h4 id="3-Unicode编码的基本概念"><a href="#3-Unicode编码的基本概念" class="headerlink" title="3.Unicode编码的基本概念"></a>3.Unicode编码的基本概念</h4><p>​    <strong>代码点：</strong>在编码字符集里面，每一个字符都有自己的一个唯一的ID，Unicode编码始终使用16进制，并且在书写的时候会加上U+ ，比如字符 ‘A’ 的编码为 U+0041。</p>
-<p>​    <strong>代码单元：</strong>则是针对编码方法而言，它指的是编码方法中对一个字符编码以后所占的最小存储单元。</p>
-<p>​    <strong>增补字符：</strong>java中，char类型为16位，原本用于表示一个字符。但是后来发现，16位的65535已经不够表示所有的字符，代码点在U+0000 — U+FFFF之内到是可以用一个char完整的表示出一个字符。但代码点在U+FFFF之外的，一个char无论如何无法表示一个完整字符。</p>
-<p>​    增补字符是代码点在 U+10000 至 U+10FFFF 范围之间的字符，也就是那些使用原始的 Unicode 的 16 位设计无法表示的字符。从 U+0000 至 U+FFFF 之间的字符集有时候被称为基本多语言面（BMP UBasic Multilingual Plane ）。</p>
-<p>​    Unicode的代码点可以分成17个代码级别。第一个代码级别称为基本的多语言级别，代码点从U+0000到U+FFFF，其中包括了经典的Unicode代码，其余的16个附加级别，代码点从U+10000到U+10FFFF，其中包括了一些增补字符。因此，每一个 Unicode 字符要么属于 BMP，要么属于增补字符<strong>。</strong></p>
-<h5 id="3-1-utf-16具体编码格式"><a href="#3-1-utf-16具体编码格式" class="headerlink" title="3.1 utf-16具体编码格式:"></a><strong>3.1 utf-16具体编码格式:</strong></h5><p>　　UTF-16 <strong>使用一个或两个未分配的16位代码单元的序列对 Unicode 代码点进行编码</strong>。假设U是一个代码点，也就是Unicode编码表中一个字符所对应的Unicode值:　　</p>
-<p>​        (1) 如果在BMP级别中，那么16bits(一个代码单元)就足够表示出字符的Unicode值。<br>　　　　(2)如果U+10FFFF&gt;U&gt;=U+10000，也就是处于增补字符级别中。UTF-16用2个16位来表示出了，并且正好将每个16位都控制在替代区域U+D800-U+DFFF（其中\uD800-\uDBFF为高代理项 范围，\uDC00- \uDFFF为低代理项 范围） 中。</p>
-<p>…….暂时略过</p>
-<p><a href="https://www.cnblogs.com/gdayq/p/5809435.html" target="_blank" rel="noopener">https://www.cnblogs.com/gdayq/p/5809435.html</a></p>
-<p>…………….</p>
-<p>​    <a href="https://www.hollischuang.com/archives/99#String%E5%AF%B9%E2%80%9C+%E2%80%9D%E7%9A%84%E9%87%8D%E8%BD%BD" target="_blank" rel="noopener">https://www.hollischuang.com/archives/99#String%E5%AF%B9%E2%80%9C+%E2%80%9D%E7%9A%84%E9%87%8D%E8%BD%BD</a></p>
-<p><a href="https://blog.csdn.net/u013564276/article/details/70896912" target="_blank" rel="noopener">https://blog.csdn.net/u013564276/article/details/70896912</a></p>
-<p><a href="https://iamyida.iteye.com/blog/2344166" target="_blank" rel="noopener">https://iamyida.iteye.com/blog/2344166</a></p>
-<p><a href="https://blog.csdn.net/u011726984/article/details/51326697#t8" target="_blank" rel="noopener">https://blog.csdn.net/u011726984/article/details/51326697#t8</a></p>
-<p><a href="https://rednaxelafx.iteye.com/blog/774673" target="_blank" rel="noopener">https://rednaxelafx.iteye.com/blog/774673</a></p>
-<p><a href="https://blog.csdn.net/qq_35580883/article/details/78273273" target="_blank" rel="noopener">https://blog.csdn.net/qq_35580883/article/details/78273273</a></p>
-<p><a href="https://www.zhihu.com/question/22739143" target="_blank" rel="noopener">https://www.zhihu.com/question/22739143</a></p>
-<p><a href="https://juejin.im/post/59fffddc5188253d6816f9c1#heading-10" target="_blank" rel="noopener">https://juejin.im/post/59fffddc5188253d6816f9c1#heading-10</a></p>
-<p><a href="https://www.cnblogs.com/java-my-life/archive/2012/04/26/2468499.html" target="_blank" rel="noopener">https://www.cnblogs.com/java-my-life/archive/2012/04/26/2468499.html</a></p>
-<h4 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a><strong>参考资料</strong></h4><p><a href="https://www.cnblogs.com/skynet/archive/2011/05/03/2035105.html" target="_blank" rel="noopener">https://www.cnblogs.com/skynet/archive/2011/05/03/2035105.html</a></p>
-<p><a href="https://www.cnblogs.com/gdayq/p/5809435.html" target="_blank" rel="noopener">https://www.cnblogs.com/gdayq/p/5809435.html</a></p>
-<p><a href="https://www.hollischuang.com/archives/99#%E4%B8%80%E4%B8%AA%E7%89%B9%E6%AE%8A%E7%9A%84%E4%BF%9D%E6%8A%A4%E7%B1%BB%E5%9E%8B%E7%9A%84%E6%9E%84%E9%80%A0%E6%96%B9%E6%B3%95" target="_blank" rel="noopener">https://www.hollischuang.com/archives/99#%E4%B8%80%E4%B8%AA%E7%89%B9%E6%AE%8A%E7%9A%84%E4%BF%9D%E6%8A%A4%E7%B1%BB%E5%9E%8B%E7%9A%84%E6%9E%84%E9%80%A0%E6%96%B9%E6%B3%95</a></p>
+<h3 id="一-概述"><a href="#一-概述" class="headerlink" title="一. 概述"></a>一. 概述</h3><p>​    <strong>早期的计算机属于单机状态，保证数据的安全性主要依靠加密算法的可靠性</strong>，即使拿到了数据密文，来恢复明文也是十分地困难的，之前使用的加密算法一般是DES对称性加密算法，现在使用较少，因为现代的计算能力，24小时内即可破除。</p>
+<p>​    后来发展到了网络时代，数据本身在传输层不会做加密处理，为了确保数据的安全性，人们开始使用了SSL协议。<strong>SSL协议工作在传输层与应用层之间，HTTPS的全称是HTTP over SSL ，就是在HTTP传输上增加了一层SSL协议的加密功能。</strong></p>
+<p>​    我们第一次想到的其实还是加密算法，在传输的过程中先加密，但是加密之前得先生成密钥，但是密钥又靠什么来进行<strong>安全地传输</strong>呢？再次加密？这就变成了递归的问题。</p>
+<p>​    新的算法就此出现了——RSA算法，一种非对称性的算法</p>
+<h3 id="二-HTTP传输的问题"><a href="#二-HTTP传输的问题" class="headerlink" title="二.HTTP传输的问题"></a>二.HTTP传输的问题</h3><p><img src="C:\Users\liuquan\Desktop\1534248048113307.png" alt="1534248048113307"></p>
+<ol>
+<li>信息篡改——修改通信的内容</li>
+<li>信息劫持——拦截到信息通信的内容</li>
+<li><strong>一般不会采用同一个秘钥，而是采用不同的秘钥加解密</strong></li>
+</ol>
+<h3 id="三-非对称性加密"><a href="#三-非对称性加密" class="headerlink" title="三. 非对称性加密"></a>三. 非对称性加密</h3><p>​    将密码革命性地分成了公钥和私钥，因为密钥不相同，所以称之为非对称性加密，<strong>而它的安全性是在于大质数分解的困难性。</strong></p>
+<p>​    它的缺点是<strong>加密和解密的耗时长，只适合对少量数据进行处理</strong>，<strong>但是如果使用非对称性加密对密钥进行传输，就能解决之前所存在的问题。</strong></p>
+<p>​    <strong>私钥加密后的密文，只要是公钥，都可以解密，但是反过来公钥加密后的密文，只有私钥可以解密。私钥只有一个人有，而公钥可以发给所有的人。</strong></p>
+<p>​    <strong>简要的传输流程</strong>：在实际传输过程中，把公钥发送给对方，一方发送信息的时候，使用另一方的公钥进行加密生成密文，收到密文的一方在用公钥进行解密。<strong>（后面有补充）</strong></p>
+<p><strong>公钥与私钥特点：</strong></p>
+<ul>
+<li>公钥是开放给所有人的，但私钥是需要保密的，存在于服务端</li>
+<li>服务器端 server 向 client 端（A、B…..）的信息传输是不安全的：因为所有人都可以获取公钥</li>
+<li>但 client 端（A、B…..）向 server 端的信息传输确实安全的：因为私钥只有 server 端存在</li>
+</ul>
+<h3 id="四-建立非对称性加密传输的流程"><a href="#四-建立非对称性加密传输的流程" class="headerlink" title="四. 建立非对称性加密传输的流程"></a>四. 建立非对称性加密传输的流程</h3><ol>
+<li>甲告诉乙，使用RSA算法来进行加密，乙说：好。</li>
+<li>甲和乙分别根据RSA生成一对密钥，互相发送公钥。</li>
+<li>甲使用乙的公钥来给乙加密报文信息。</li>
+<li>乙收到信息，并用自己的密钥进行解密。</li>
+<li>乙按照相同的方式给甲发送信息，甲使用相同的方式进行解密。</li>
+</ol>
+<p>​    信息通信采用http是不安全的，存在信息劫持、篡改的风险，https是加密传输，是安全的通信。</p>
+<p>​    对于https加密的过程，我们首先介绍的对称加密，<strong>采用对称加密进行通信存在秘钥协商过程的不安全性</strong>，因此我们采用了非对称加密算法解决了对协商过程的加密，因此https是集对称加密和非对称加密为一体的加密过程。</p>
+<h3 id="五-当中存在的重要问题："><a href="#五-当中存在的重要问题：" class="headerlink" title="五. 当中存在的重要问题："></a><strong>五. 当中存在的重要问题：</strong></h3><h4 id="公钥被替换的情况"><a href="#公钥被替换的情况" class="headerlink" title="公钥被替换的情况"></a>公钥被替换的情况</h4><p><img src="C:\Users\liuquan\Desktop\1534258161228233.png" alt="1534258161228233"></p>
+<p>在发送公钥的途中，黑客去截取了甲的信息，并且严刑拷打之后知道了使者是去送公钥的，隐藏起甲发送给乙的公钥，然后自己生成一对密钥，冒充甲，然后交换公钥。这就形成了<strong>信任危机——我不知道这位送信使者是真的还是假的</strong></p>
+<h4 id="信任危机的解决方法——CA-证书机构"><a href="#信任危机的解决方法——CA-证书机构" class="headerlink" title="信任危机的解决方法——CA/证书机构"></a>信任危机的解决方法——CA/证书机构</h4><p>​    为了确保送信使者的真假身份，引入了一个权威的机构——CA，它是负责管理和签发证书的第三方机构，<strong>作用是检查证书持有者身份的合法性，并签发证书，以防证书被伪造或篡改.</strong></p>
+<p>​    CA 证书就是CA颁发的证书。 CA证书也就我们常说的数字证书，包含</p>
+<ul>
+<li><strong>证书拥有者的身份信息</strong></li>
+<li><strong>CA机构的签名</strong></li>
+<li><strong>公钥和私钥</strong></li>
+</ul>
+<p>​    身份信息用于证明证书持有者的身份；CA签名用于保证身份的真实性；公钥和私钥用于通信过程中加解密，从而保证通讯信息的安全性。</p>
+<h4 id="TLS-SSL的区别"><a href="#TLS-SSL的区别" class="headerlink" title="TLS/SSL的区别"></a>TLS/SSL的区别</h4><p>​    TLS可以理解为SSL协议的3.0版本的升级，TLS1.0版本也会标识为SSL3.1版本。但是对于大的协议栈SSL和TLS没有大的区别。</p>
+<h4 id="SSL证书验证过程"><a href="#SSL证书验证过程" class="headerlink" title="SSL证书验证过程"></a>SSL证书验证过程</h4><p>​    服务器发送了一个SSL证书给客户端，SSL 证书中包含的具体内容有证书的颁发机构、有效期、公钥、证书持有者、签名，通过第三方的校验保证了身份的合法，<strong>解决了公钥获取的安全性</strong></p>
+<p>（1）<strong>首先浏览器读取证书中的证书所有者、有效期等信息进行一一校验</strong></p>
+<p>（2）<strong>操作系统内部校验证书是否是合法的机构颁发</strong>，浏览器开始查找操作系统中已内置的受信任的证书发布机构CA，与服务器发来的证书中的颁发者CA比对，用于校验证书是否为合法机构颁发 </p>
+<p>（3）<strong>如果找不到，浏览器就会报错，说明服务器发来的证书是不可信任的</strong>。</p>
+<p>（4）<strong>如果找到，那么浏览器就会从操作系统中取出颁发者  CA  的公钥</strong>，<strong>然后对服务器发来的证书里面的签名进行解密</strong></p>
+<p>（5）<strong>浏览器使用相同的hash算法计算出服务器发来的证书的hash值，将这个计算的hash值与证书中签名做对比</strong></p>
+<p>（6）<strong>对比结果一致，则证明服务器发来的证书合法，没有被冒充</strong></p>
+<p>（7）<strong>此时浏览器就可以读取证书中的公钥，用于后续加密了</strong></p>
+<h3 id="六-HTTPS的握手流程"><a href="#六-HTTPS的握手流程" class="headerlink" title="六. HTTPS的握手流程"></a>六. HTTPS的握手流程</h3><p><img src="D:\软件\QQ数据记录\780101896\FileRecv\MobileFile\IMG_20190529_154722.jpg" alt="IMG_20190529_154722"></p>
+<p>​    <img src="C:\Users\liuquan\Desktop\1534251965821525.png" alt="1534251965821525"></p>
+<p>第一次发生 <strong>Client Hello 协议的请求</strong>：在其中最重要的信息是 Cipher Suites 字段，客户端会告诉服务器端自己支持哪些加密的套件。</p>
+<p>​    第二，服务器端收到客户端发来的Client Hello 请求后，返回一系列的协议的数据，并以一个没有数据内容的Server Hello Done 作为结束。</p>
+<h3 id="五"><a href="#五" class="headerlink" title="五."></a>五.</h3><p>参考资料</p>
+<ol>
+<li>《码处高效》</li>
+<li><a href="https://blog.51cto.com/11883699/2160032" target="_blank" rel="noopener">https://blog.51cto.com/11883699/2160032</a></li>
+</ol>
 </the></excerpt>
       
       
@@ -331,13 +323,13 @@
   
     
     <div class="copyright">
-        <p><span>本文标题:</span><a href="/2019/03/23/String源码剖析/">String部分源码剖析</a></p>
+        <p><span>本文标题:</span><a href="/2019/06/11/HTTPS的加密流程/"></a></p>
         <p><span>文章作者:</span><a href="/" title="访问 Whits 的个人博客">Whits</a></p>
-        <p><span>发布时间:</span>2019年03月23日 - 09时53分</p>
-        <p><span>最后更新:</span>2019年05月08日 - 17时17分</p>
+        <p><span>发布时间:</span>2019年06月11日 - 15时55分</p>
+        <p><span>最后更新:</span>2019年05月29日 - 15时58分</p>
         <p>
-            <span>原始链接:</span><a class="post-url" href="/2019/03/23/String源码剖析/" title="String部分源码剖析">http://yoursite.com/2019/03/23/String源码剖析/</a>
-            <span class="copy-path" data-clipboard-text="原文: http://yoursite.com/2019/03/23/String源码剖析/　　作者: Whits" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <span>原始链接:</span><a class="post-url" href="/2019/06/11/HTTPS的加密流程/" title>http://yoursite.com/2019/06/11/HTTPS的加密流程/</a>
+            <span class="copy-path" data-clipboard-text="原文: http://yoursite.com/2019/06/11/HTTPS的加密流程/　　作者: Whits" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
             <script src="/js/clipboard.min.js"></script>
             <script> var clipboard = new Clipboard('.copy-path'); </script>
         </p>
@@ -350,18 +342,9 @@
 
 <nav id="article-nav">
   
-    <a href="/2019/04/06/Java编译期优化/" id="article-nav-newer" class="article-nav-link-wrap">
-      <strong class="article-nav-caption"><</strong>
-      <div class="article-nav-title">
-        
-          Java早期(编译期)优化
-        
-      </div>
-    </a>
   
-  
-    <a href="/2019/03/15/Object源码剖析/" id="article-nav-older" class="article-nav-link-wrap">
-      <div class="article-nav-title">Object源码剖析（顺带分析了notify/wait）</div>
+    <a href="/2019/06/09/Mysql技术内幕-事务(一)/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">Mysql中的事务（一）</div>
       <strong class="article-nav-caption">></strong>
     </a>
   
@@ -372,7 +355,7 @@
 
     <div id="toc" class="toc-article">
     <strong class="toc-title">文章目录</strong>
-    <ol class="toc"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-字符集与字符编码"><span class="toc-number">1.</span> <span class="toc-text">1.字符集与字符编码</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-常用的字符集"><span class="toc-number">2.</span> <span class="toc-text">2.常用的字符集</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-Unicode编码的基本概念"><span class="toc-number">3.</span> <span class="toc-text">3.Unicode编码的基本概念</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#3-1-utf-16具体编码格式"><span class="toc-number">3.1.</span> <span class="toc-text">3.1 utf-16具体编码格式:</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#参考资料"><span class="toc-number">4.</span> <span class="toc-text">参考资料</span></a></li></ol>
+    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#一-概述"><span class="toc-number">1.</span> <span class="toc-text">一. 概述</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#二-HTTP传输的问题"><span class="toc-number">2.</span> <span class="toc-text">二.HTTP传输的问题</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#三-非对称性加密"><span class="toc-number">3.</span> <span class="toc-text">三. 非对称性加密</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#四-建立非对称性加密传输的流程"><span class="toc-number">4.</span> <span class="toc-text">四. 建立非对称性加密传输的流程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#五-当中存在的重要问题："><span class="toc-number">5.</span> <span class="toc-text">五. 当中存在的重要问题：</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#公钥被替换的情况"><span class="toc-number">5.1.</span> <span class="toc-text">公钥被替换的情况</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#信任危机的解决方法——CA-证书机构"><span class="toc-number">5.2.</span> <span class="toc-text">信任危机的解决方法——CA/证书机构</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#TLS-SSL的区别"><span class="toc-number">5.3.</span> <span class="toc-text">TLS/SSL的区别</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#SSL证书验证过程"><span class="toc-number">5.4.</span> <span class="toc-text">SSL证书验证过程</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#六-HTTPS的握手流程"><span class="toc-number">6.</span> <span class="toc-text">六. HTTPS的握手流程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#五"><span class="toc-number">7.</span> <span class="toc-text">五.</span></a></li></ol>
 </div>
 <input type="button" id="tocButton" value="隐藏目录" title="点击按钮隐藏或者显示文章目录">
 
@@ -423,13 +406,11 @@
 
     <div class="scroll" id="post-nav-button">
         
-            <a href="/2019/04/06/Java编译期优化/" title="上一篇: Java早期(编译期)优化">
-                <i class="fa fa-angle-left"></i>
-            </a>
+            <a href="/" title="回到主页"><i class="fa fa-home"></i></a>
         
         <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
         
-            <a href="/2019/03/15/Object源码剖析/" title="下一篇: Object源码剖析（顺带分析了notify/wait）">
+            <a href="/2019/06/09/Mysql技术内幕-事务(一)/" title="下一篇: Mysql中的事务（一）">
                 <i class="fa fa-angle-right"></i>
             </a>
         

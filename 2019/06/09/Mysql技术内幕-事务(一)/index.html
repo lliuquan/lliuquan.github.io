@@ -3,20 +3,28 @@
 <head><meta name="generator" content="Hexo 3.8.0">
   <meta charset="utf-8">
   
-  <title>String部分源码剖析 | Whits&#39;s Blog</title>
+  <title>Mysql中的事务（一） | Whits&#39;s Blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="本文主要讲解了 JDK 下的String的部分源码，以及涉及到的String的一些相关知识点,比如，本文参考资料见文末">
-<meta name="keywords" content="String,源码">
+  <meta name="description" content="本文主要讲解了Mysql的InnoDB引擎的事务的基础知识，以及redo日志的结构与实现，LSN的内容。本文参考资料见文末">
+<meta name="keywords" content="事务">
 <meta property="og:type" content="article">
-<meta property="og:title" content="String部分源码剖析">
-<meta property="og:url" content="http://yoursite.com/2019/03/23/String源码剖析/index.html">
+<meta property="og:title" content="Mysql中的事务（一）">
+<meta property="og:url" content="http://yoursite.com/2019/06/09/Mysql技术内幕-事务(一)/index.html">
 <meta property="og:site_name" content="Whits&#39;s Blog">
-<meta property="og:description" content="本文主要讲解了 JDK 下的String的部分源码，以及涉及到的String的一些相关知识点,比如，本文参考资料见文末">
+<meta property="og:description" content="本文主要讲解了Mysql的InnoDB引擎的事务的基础知识，以及redo日志的结构与实现，LSN的内容。本文参考资料见文末">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2019-05-08T09:17:10.023Z">
+<meta property="og:image" content="c:/Users/liuquan/Downloads/未命名文件.jpg">
+<meta property="og:image" content="c:/Users/liuquan/Downloads/未命名文件%20(1">
+<meta property="og:image" content="c:/Users/liuquan/Downloads/未命名文件%20(3">
+<meta property="og:image" content="c:/Users/liuquan/Downloads/未命名文件%20(4">
+<meta property="og:image" content="c:/Users/liuquan/Downloads/未命名文件%20(6">
+<meta property="og:image" content="c:/Users/liuquan/Downloads/java%20(3">
+<meta property="og:image" content="c:/Users/liuquan/Downloads/java%20(4">
+<meta property="og:updated_time" content="2019-06-12T07:15:25.379Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="String部分源码剖析">
-<meta name="twitter:description" content="本文主要讲解了 JDK 下的String的部分源码，以及涉及到的String的一些相关知识点,比如，本文参考资料见文末">
+<meta name="twitter:title" content="Mysql中的事务（一）">
+<meta name="twitter:description" content="本文主要讲解了Mysql的InnoDB引擎的事务的基础知识，以及redo日志的结构与实现，LSN的内容。本文参考资料见文末">
+<meta name="twitter:image" content="c:/Users/liuquan/Downloads/未命名文件.jpg">
   
     <link rel="alternative" href="/atom.xml" title="Whits&#39;s Blog" type="application/atom+xml">
   
@@ -228,11 +236,11 @@
         </header>                
     </div>
 </nav>
-      <div class="body-wrap"><article id="post-String源码剖析" class="article article-type-post" itemscope itemprop="blogPost">
+      <div class="body-wrap"><article id="post-Mysql技术内幕-事务(一)" class="article article-type-post" itemscope itemprop="blogPost">
   
     <div class="article-meta">
-      <a href="/2019/03/23/String源码剖析/" class="article-date">
-      <time datetime="2019-03-23T01:53:16.000Z" itemprop="datePublished">2019-03-23</time>
+      <a href="/2019/06/09/Mysql技术内幕-事务(一)/" class="article-date">
+      <time datetime="2019-06-09T07:56:19.000Z" itemprop="datePublished">2019-06-09</time>
 </a>
     </div>
   
@@ -245,7 +253,7 @@
         
   
     <h1 class="article-title" itemprop="name">
-      String部分源码剖析
+      Mysql中的事务（一）
     </h1>
   
 
@@ -254,13 +262,13 @@
       <div class="article-info article-info-post">
         
     <div class="article-category tagcloud">
-    <a class="article-category-link" href="/categories/JDK源码/">JDK源码</a>
+    <a class="article-category-link" href="/categories/Mysql/">Mysql</a>
     </div>
 
 
         
     <div class="article-tag tagcloud">
-        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/String/">String</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/源码/">源码</a></li></ul>
+        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/事务/">事务</a></li></ul>
     </div>
 
         <div class="clearfix"></div>
@@ -272,56 +280,70 @@
           
         <excerpt in index | 首页摘要> 
 
-<p>本文主要讲解了 JDK 下的String的部分源码，以及涉及到的String的一些相关知识点,比如，本文参考资料见文末<br><a id="more"></a></p>
+<p>本文主要讲解了<strong>Mysql的InnoDB引擎的事务的基础知识，以及redo日志的结构与实现，LSN的内容</strong>。本文参考资料见文末</p>
+<a id="more"></a>
 <the rest of contents | 余下全文>
 
-<p>阅读该源码，所要具备的基础知识</p>
-<h4 id="1-字符集与字符编码"><a href="#1-字符集与字符编码" class="headerlink" title="1.字符集与字符编码"></a>1.字符集与字符编码</h4><p>​    计算机中储存的信息都是用二进制数表示的；而我们在屏幕上看到的英文、汉字等字符是二进制数转换之后的结果。通俗的说，按照何种规则将字符存储在计算机中，如’a’用什么表示，称为”编码”；</p>
-<p>​    反之，将存储在计算机中的二进制数解析显示出来，称为”解码”，如同密码学中的加密和解密。在解码过程中，如果使用了错误的解码规则，则导致’a’解析成’b’或者乱码。</p>
-<p>​    <strong>字符集（Charset）</strong>：是一个系统支持的所有抽象字符的集合。字符是各种文字和符号的总称，包括各国家文字、标点符号、图形符号、数字等。</p>
-<p>​    <strong>字符编码（Character Encoding）</strong>：是一套法则，使用该法则能够对自然语言的字符的一个集合（如字母表或音节表），与其他东西的一个集合（如号码或电脉冲）进行配对。</p>
-<p>​    即在符号集合与数字系统之间建立对应关系，它是信息处理的一项基本技术。通常人们用符号集合（一般情况下就是文字）来表达信息。而以计算机为基础的信息处理系统则是利用元件（硬件）不同状态的组合来存储和处理信息的。<strong>元件不同状态的组合能代表数字系统的数字，因此字符编码就是将符号转换为计算机可以接受的数字系统的数，称为数字代码。</strong></p>
-<h4 id="2-常用的字符集"><a href="#2-常用的字符集" class="headerlink" title="2.常用的字符集"></a><strong>2.常用的字符集</strong></h4><p>常见字符集名称：ASCII字符集、GB2312字符集、BIG5字符集、GB18030字符集、Unicode字符集等</p>
-<table>
-<thead>
-<tr>
-<th>字符集</th>
-<th>ASCII字符集</th>
-<th>Unicode字符集</th>
-<th><strong>GBXXXX字符集（GBK，</strong>GB2312…<strong>）</strong></th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>编码方式</td>
-<td><strong>ASCII编码</strong></td>
-<td><strong>UTF-32/ UTF-16/ UTF-8 三种方式</strong></td>
-<td><strong>相对应的GBXXXX编码</strong></td>
-</tr>
-</tbody>
-</table>
-<h4 id="3-Unicode编码的基本概念"><a href="#3-Unicode编码的基本概念" class="headerlink" title="3.Unicode编码的基本概念"></a>3.Unicode编码的基本概念</h4><p>​    <strong>代码点：</strong>在编码字符集里面，每一个字符都有自己的一个唯一的ID，Unicode编码始终使用16进制，并且在书写的时候会加上U+ ，比如字符 ‘A’ 的编码为 U+0041。</p>
-<p>​    <strong>代码单元：</strong>则是针对编码方法而言，它指的是编码方法中对一个字符编码以后所占的最小存储单元。</p>
-<p>​    <strong>增补字符：</strong>java中，char类型为16位，原本用于表示一个字符。但是后来发现，16位的65535已经不够表示所有的字符，代码点在U+0000 — U+FFFF之内到是可以用一个char完整的表示出一个字符。但代码点在U+FFFF之外的，一个char无论如何无法表示一个完整字符。</p>
-<p>​    增补字符是代码点在 U+10000 至 U+10FFFF 范围之间的字符，也就是那些使用原始的 Unicode 的 16 位设计无法表示的字符。从 U+0000 至 U+FFFF 之间的字符集有时候被称为基本多语言面（BMP UBasic Multilingual Plane ）。</p>
-<p>​    Unicode的代码点可以分成17个代码级别。第一个代码级别称为基本的多语言级别，代码点从U+0000到U+FFFF，其中包括了经典的Unicode代码，其余的16个附加级别，代码点从U+10000到U+10FFFF，其中包括了一些增补字符。因此，每一个 Unicode 字符要么属于 BMP，要么属于增补字符<strong>。</strong></p>
-<h5 id="3-1-utf-16具体编码格式"><a href="#3-1-utf-16具体编码格式" class="headerlink" title="3.1 utf-16具体编码格式:"></a><strong>3.1 utf-16具体编码格式:</strong></h5><p>　　UTF-16 <strong>使用一个或两个未分配的16位代码单元的序列对 Unicode 代码点进行编码</strong>。假设U是一个代码点，也就是Unicode编码表中一个字符所对应的Unicode值:　　</p>
-<p>​        (1) 如果在BMP级别中，那么16bits(一个代码单元)就足够表示出字符的Unicode值。<br>　　　　(2)如果U+10FFFF&gt;U&gt;=U+10000，也就是处于增补字符级别中。UTF-16用2个16位来表示出了，并且正好将每个16位都控制在替代区域U+D800-U+DFFF（其中\uD800-\uDBFF为高代理项 范围，\uDC00- \uDFFF为低代理项 范围） 中。</p>
-<p>…….暂时略过</p>
-<p><a href="https://www.cnblogs.com/gdayq/p/5809435.html" target="_blank" rel="noopener">https://www.cnblogs.com/gdayq/p/5809435.html</a></p>
-<p>…………….</p>
-<p>​    <a href="https://www.hollischuang.com/archives/99#String%E5%AF%B9%E2%80%9C+%E2%80%9D%E7%9A%84%E9%87%8D%E8%BD%BD" target="_blank" rel="noopener">https://www.hollischuang.com/archives/99#String%E5%AF%B9%E2%80%9C+%E2%80%9D%E7%9A%84%E9%87%8D%E8%BD%BD</a></p>
-<p><a href="https://blog.csdn.net/u013564276/article/details/70896912" target="_blank" rel="noopener">https://blog.csdn.net/u013564276/article/details/70896912</a></p>
-<p><a href="https://iamyida.iteye.com/blog/2344166" target="_blank" rel="noopener">https://iamyida.iteye.com/blog/2344166</a></p>
-<p><a href="https://blog.csdn.net/u011726984/article/details/51326697#t8" target="_blank" rel="noopener">https://blog.csdn.net/u011726984/article/details/51326697#t8</a></p>
-<p><a href="https://rednaxelafx.iteye.com/blog/774673" target="_blank" rel="noopener">https://rednaxelafx.iteye.com/blog/774673</a></p>
-<p><a href="https://blog.csdn.net/qq_35580883/article/details/78273273" target="_blank" rel="noopener">https://blog.csdn.net/qq_35580883/article/details/78273273</a></p>
-<p><a href="https://www.zhihu.com/question/22739143" target="_blank" rel="noopener">https://www.zhihu.com/question/22739143</a></p>
-<p><a href="https://juejin.im/post/59fffddc5188253d6816f9c1#heading-10" target="_blank" rel="noopener">https://juejin.im/post/59fffddc5188253d6816f9c1#heading-10</a></p>
-<p><a href="https://www.cnblogs.com/java-my-life/archive/2012/04/26/2468499.html" target="_blank" rel="noopener">https://www.cnblogs.com/java-my-life/archive/2012/04/26/2468499.html</a></p>
-<h4 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a><strong>参考资料</strong></h4><p><a href="https://www.cnblogs.com/skynet/archive/2011/05/03/2035105.html" target="_blank" rel="noopener">https://www.cnblogs.com/skynet/archive/2011/05/03/2035105.html</a></p>
-<p><a href="https://www.cnblogs.com/gdayq/p/5809435.html" target="_blank" rel="noopener">https://www.cnblogs.com/gdayq/p/5809435.html</a></p>
-<p><a href="https://www.hollischuang.com/archives/99#%E4%B8%80%E4%B8%AA%E7%89%B9%E6%AE%8A%E7%9A%84%E4%BF%9D%E6%8A%A4%E7%B1%BB%E5%9E%8B%E7%9A%84%E6%9E%84%E9%80%A0%E6%96%B9%E6%B3%95" target="_blank" rel="noopener">https://www.hollischuang.com/archives/99#%E4%B8%80%E4%B8%AA%E7%89%B9%E6%AE%8A%E7%9A%84%E4%BF%9D%E6%8A%A4%E7%B1%BB%E5%9E%8B%E7%9A%84%E6%9E%84%E9%80%A0%E6%96%B9%E6%B3%95</a></p>
+<h3 id="一-两个日志"><a href="#一-两个日志" class="headerlink" title="一.两个日志"></a>一.两个日志</h3><p>​    <strong>事务的隔离性由是数据库中的锁来实现，原子性，隔离性，持久性由redo log 和 undo log 来实现（其中redo日志来实现事务的持久性）， redo log 和 undo log 都是一种恢复操作 </strong></p>
+<p>​    <strong>redo 恢复提交事务修改的页操作，而undo 回滚行记录到某个特定版本。</strong></p>
+<p>​    <strong>redo 通常是物理日志，记录的是页的物理修改操作，undo是逻辑日志，根据每行进行记录。</strong></p>
+<h3 id="二-redo-日志"><a href="#二-redo-日志" class="headerlink" title="二. redo 日志"></a>二. redo 日志</h3><h4 id="（1）日志的两个部分"><a href="#（1）日志的两个部分" class="headerlink" title="（1）日志的两个部分"></a>（1）日志的两个部分</h4><p>​    这个日志有两部分组成，一部分是<strong>内存中的重做日志缓冲（redo log buffer）</strong>，<strong>其是易失的</strong>，第二部分是<strong>重做日志文件（redo log file）其是持久的</strong>。</p>
+<h4 id="（2）Force-Log-at-Commit（日志写入日志文件）"><a href="#（2）Force-Log-at-Commit（日志写入日志文件）" class="headerlink" title="（2）Force Log at Commit（日志写入日志文件）"></a>（2）Force Log at Commit（日志写入日志文件）</h4><p>​    InnoDB引擎是事务的存储引擎，其通过<strong>Force Log at Commit 机制</strong>来实现事务的持久性——<strong>当事务提交的时候，必须将该事务的所有日志写入重做日志文件进行持久化，待事务的COMMIT操作完成才算完成</strong>。</p>
+<p><img src="C:\Users\liuquan\Downloads\未命名文件.jpg" alt="未命名文件"></p>
+<h4 id="（3）两个日志的特点（不需要读取操作，随机读写）"><a href="#（3）两个日志的特点（不需要读取操作，随机读写）" class="headerlink" title="（3）两个日志的特点（不需要读取操作，随机读写）"></a>（3）两个日志的特点（不需要读取操作，随机读写）</h4><p>​    <strong>其中，重做日志包括了两部分(redo和undo两部分) ，redo log 来保证事务的持久性，undo log 来帮助事务回滚和MVCC的功能。</strong></p>
+<ul>
+<li><strong>redo是顺序写的，在数据库的运行时不需要对redo log 的文件进行读取操作</strong></li>
+<li><strong>而 undo log是需要进行随机读写的（因为说不定需要回滚）</strong></li>
+</ul>
+<h4 id="（4）确保日志写入日志文件"><a href="#（4）确保日志写入日志文件" class="headerlink" title="（4）确保日志写入日志文件"></a>（4）确保日志写入日志文件</h4><p>​    当没有使用O_DIRECT的选项时，数据库会进行下图的做法（<strong>O_DIRECT选项是在Linux系统中的选项，使用该选项后，对文件进行直接IO操作，不经过文件系统缓存，直接写入磁盘</strong>）</p>
+<p><img src="C:\Users\liuquan\Downloads\未命名文件 (1" alt="未命名文件 (1)">.jpg)</p>
+<h4 id="（5）提高数据库的性能"><a href="#（5）提高数据库的性能" class="headerlink" title="（5）提高数据库的性能"></a>（5）提高数据库的性能</h4><p>​    我们知道写入磁盘的fsync操作十分耗费时间，那么为了提高性能，我们可以选择<strong>当事务提交的时候，日志不写入重做日志文件，而是等待一个时间周期后在执行fsync的操作，并非强制在事务提交前进行一次fsync操作。</strong></p>
+<p>​    缺点：当数据库宕机的时候，由于部分日志没有刷新到磁盘，会丢失最后一段时间的事务。</p>
+<p><img src="C:\Users\liuquan\Downloads\未命名文件 (3" alt="未命名文件 (3)">.jpg)</p>
+<p>​    但是需要记住的是，<strong>这种方法失去了事务的ACID的特性</strong>，<strong>在插入大批量的数据时，应该在插入完之后，进行一次commit操作，而不是插入一条后进行一次commit操作，这样做能够使事务方法在回滚的时候回滚到事务最开始的状态。</strong></p>
+<h4 id="（6）重做日志的存储与结构"><a href="#（6）重做日志的存储与结构" class="headerlink" title="（6）重做日志的存储与结构"></a>（6）重做日志的存储与结构</h4><p>​    重做日志是建立引擎上的，对于InnoDB引擎来说，重做日志都是以512字节进行存储的。这意味着重做日志缓存，重做日志文件都是以 <strong>“块”</strong> 的方式来保存，叫做 <strong>“重做日志块”</strong> （磁盘扇区大小都是512字节）。</p>
+<p>​    若一个页中产生的重做日志块数量大于 512 字节，那么需要分割多个重做日志块进行存储。因为都是512字节，所以重做日志块的写入可以保证原子性，不需要doublewrite技术。</p>
+<p>​    下面来看一下：<strong>重做日志缓存的结构！</strong></p>
+<p>​        <img src="C:\Users\liuquan\Downloads\未命名文件 (4" alt="未命名文件 (4)">.jpg)</p>
+<p>​    接着重点讲一下，FIRST_REC_GROUP 的意思</p>
+<p><img src="C:\Users\liuquan\Downloads\未命名文件 (6" alt="未命名文件 (6)">.jpg)</p>
+<h4 id="（7）重做日志组（重做日志文件的组合）"><a href="#（7）重做日志组（重做日志文件的组合）" class="headerlink" title="（7）重做日志组（重做日志文件的组合）"></a>（7）重做日志组（重做日志文件的组合）</h4><p>​    log group 为重做日志组，其中与许多重做日志文件，<strong>InnoDB 实际只有一个log group（源码支持多个，但是在配置文件中禁止了）</strong>。</p>
+<p>​    <strong>它是一个逻辑上的概念</strong>，实际上没有一个存储的物理文件来表示log group信息。</p>
+<p>​    <strong>它由许多个重做日志文件组成，每个日志文件的大小都是相同的。</strong>在 InnoDB 的 1.2版本之前，重做日志文件的总大小小于 4GB，之后提高为512 GB .</p>
+<p>​    重做日志文件存储的就是log buffer中保存的 log block，也是按照块的方式去存储。</p>
+<h4 id="（8）log-buffer-的提交"><a href="#（8）log-buffer-的提交" class="headerlink" title="（8）log buffer 的提交"></a>（8）log buffer 的提交</h4><ul>
+<li><p>当事务提交的时候</p>
+</li>
+<li><p>当log buffer 中有一般的内存空间已经被使用时</p>
+</li>
+<li><p>log checkpoint时</p>
+<p>存在以上三种情况的时候，内存中的log block会刷新到磁盘上</p>
+<p><img src="C:\Users\liuquan\Downloads\java (3" alt="java (1)">.jpg)</p>
+</li>
+</ul>
+<h4 id="（9）LSN-Log-Sequence-Number-日志序列号"><a href="#（9）LSN-Log-Sequence-Number-日志序列号" class="headerlink" title="（9）LSN (Log Sequence Number/日志序列号)"></a>（9）LSN (Log Sequence Number/日志序列号)</h4><p>​    在InnoDB引擎中，LSN占用8字节，并且单调递增。LSN表示的含义有：</p>
+<ul>
+<li><strong>重做日志的写入的总量</strong></li>
+<li>checkPoint的位置</li>
+<li>页的版本</li>
+</ul>
+<p><strong>如果当前重做日志的LSN为1000，一个事务写入了100字节的重做日志，那么LSN变为1100，又有事务T2写入了200字节的重做日志，那么lsn就变成了1300</strong></p>
+<p><strong>LSN不仅记录在重做日志中，还存在每个页中，在每个页的头部，有一个值为FIL_PAGE_LSN，记录了该页的LSN.</strong></p>
+<p><strong>在该页中，LSN表示该页最后刷新时 LSN 的大小，因为重做日志记录的是每个页的日志，因此页中的LSN用来判断页是否需要进行恢复操作。</strong></p>
+<p>如：</p>
+<p>​    页P1的LSN为10000，那么数据库启动的时候,InnoDB检测到写入重做日志的LSN为13000，且事务已经提交。</p>
+<p>​    那么数据库需要进行恢复操作，将重做日志应用到P1页中。</p>
+<p>​    <strong>如果重做日志的LSN小于P1页中的LSN，不需要重做，因为P1页中的LSN表示页已经被刷新了</strong></p>
+<p><img src="C:\Users\liuquan\Downloads\java (4" alt="java (1)">.jpg)</p>
+<p>通过命令 <strong>SHOW ENGINE INNODB STATUS</strong>来查看LSN的情况，log的部分会出现下面的参数</p>
+<ul>
+<li>Log sequence number <strong>表示当前的LSN（日志缓存当中）</strong></li>
+<li>Log flushed up to  <strong>表示刷新到重做日志文件的LSN</strong></li>
+<li>Last checkpoint at <strong>表示刷新到磁盘的LSN</strong></li>
+</ul>
+<h4 id="（10）恢复"><a href="#（10）恢复" class="headerlink" title="（10）恢复"></a>（10）恢复</h4><p>​    InnoDB存储引擎在启动的时候，无论上次数据库是否正常关闭，都会尝试进行恢复，checkPoint表示刷新到磁盘页的LSN，在恢复过程中，仅需恢复checkPoint开始的日志部分。</p>
+<h3 id="三-参考资料："><a href="#三-参考资料：" class="headerlink" title="三.参考资料："></a>三.参考资料：</h3><p><a href="https://juejin.im/post/5c3c5c0451882525487c498d#heading-17" target="_blank" rel="noopener">https://juejin.im/post/5c3c5c0451882525487c498d#heading-17</a></p>
+<p>《Mysql技术内幕——InnoDB存储引擎》</p>
 </the></excerpt>
       
       
@@ -331,13 +353,13 @@
   
     
     <div class="copyright">
-        <p><span>本文标题:</span><a href="/2019/03/23/String源码剖析/">String部分源码剖析</a></p>
+        <p><span>本文标题:</span><a href="/2019/06/09/Mysql技术内幕-事务(一)/">Mysql中的事务（一）</a></p>
         <p><span>文章作者:</span><a href="/" title="访问 Whits 的个人博客">Whits</a></p>
-        <p><span>发布时间:</span>2019年03月23日 - 09时53分</p>
-        <p><span>最后更新:</span>2019年05月08日 - 17时17分</p>
+        <p><span>发布时间:</span>2019年06月09日 - 15时56分</p>
+        <p><span>最后更新:</span>2019年06月12日 - 15时15分</p>
         <p>
-            <span>原始链接:</span><a class="post-url" href="/2019/03/23/String源码剖析/" title="String部分源码剖析">http://yoursite.com/2019/03/23/String源码剖析/</a>
-            <span class="copy-path" data-clipboard-text="原文: http://yoursite.com/2019/03/23/String源码剖析/　　作者: Whits" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <span>原始链接:</span><a class="post-url" href="/2019/06/09/Mysql技术内幕-事务(一)/" title="Mysql中的事务（一）">http://yoursite.com/2019/06/09/Mysql技术内幕-事务(一)/</a>
+            <span class="copy-path" data-clipboard-text="原文: http://yoursite.com/2019/06/09/Mysql技术内幕-事务(一)/　　作者: Whits" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
             <script src="/js/clipboard.min.js"></script>
             <script> var clipboard = new Clipboard('.copy-path'); </script>
         </p>
@@ -350,18 +372,18 @@
 
 <nav id="article-nav">
   
-    <a href="/2019/04/06/Java编译期优化/" id="article-nav-newer" class="article-nav-link-wrap">
+    <a href="/2019/06/11/HTTPS的加密流程/" id="article-nav-newer" class="article-nav-link-wrap">
       <strong class="article-nav-caption"><</strong>
       <div class="article-nav-title">
         
-          Java早期(编译期)优化
+          (no title)
         
       </div>
     </a>
   
   
-    <a href="/2019/03/15/Object源码剖析/" id="article-nav-older" class="article-nav-link-wrap">
-      <div class="article-nav-title">Object源码剖析（顺带分析了notify/wait）</div>
+    <a href="/2019/05/18/一条SQL语句的执行流程/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">SQL语句的执行流程</div>
       <strong class="article-nav-caption">></strong>
     </a>
   
@@ -372,7 +394,7 @@
 
     <div id="toc" class="toc-article">
     <strong class="toc-title">文章目录</strong>
-    <ol class="toc"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-字符集与字符编码"><span class="toc-number">1.</span> <span class="toc-text">1.字符集与字符编码</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-常用的字符集"><span class="toc-number">2.</span> <span class="toc-text">2.常用的字符集</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-Unicode编码的基本概念"><span class="toc-number">3.</span> <span class="toc-text">3.Unicode编码的基本概念</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#3-1-utf-16具体编码格式"><span class="toc-number">3.1.</span> <span class="toc-text">3.1 utf-16具体编码格式:</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#参考资料"><span class="toc-number">4.</span> <span class="toc-text">参考资料</span></a></li></ol>
+    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#一-两个日志"><span class="toc-number">1.</span> <span class="toc-text">一.两个日志</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#二-redo-日志"><span class="toc-number">2.</span> <span class="toc-text">二. redo 日志</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#（1）日志的两个部分"><span class="toc-number">2.1.</span> <span class="toc-text">（1）日志的两个部分</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#（2）Force-Log-at-Commit（日志写入日志文件）"><span class="toc-number">2.2.</span> <span class="toc-text">（2）Force Log at Commit（日志写入日志文件）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#（3）两个日志的特点（不需要读取操作，随机读写）"><span class="toc-number">2.3.</span> <span class="toc-text">（3）两个日志的特点（不需要读取操作，随机读写）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#（4）确保日志写入日志文件"><span class="toc-number">2.4.</span> <span class="toc-text">（4）确保日志写入日志文件</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#（5）提高数据库的性能"><span class="toc-number">2.5.</span> <span class="toc-text">（5）提高数据库的性能</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#（6）重做日志的存储与结构"><span class="toc-number">2.6.</span> <span class="toc-text">（6）重做日志的存储与结构</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#（7）重做日志组（重做日志文件的组合）"><span class="toc-number">2.7.</span> <span class="toc-text">（7）重做日志组（重做日志文件的组合）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#（8）log-buffer-的提交"><span class="toc-number">2.8.</span> <span class="toc-text">（8）log buffer 的提交</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#（9）LSN-Log-Sequence-Number-日志序列号"><span class="toc-number">2.9.</span> <span class="toc-text">（9）LSN (Log Sequence Number/日志序列号)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#（10）恢复"><span class="toc-number">2.10.</span> <span class="toc-text">（10）恢复</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#三-参考资料："><span class="toc-number">3.</span> <span class="toc-text">三.参考资料：</span></a></li></ol>
 </div>
 <input type="button" id="tocButton" value="隐藏目录" title="点击按钮隐藏或者显示文章目录">
 
@@ -423,13 +445,13 @@
 
     <div class="scroll" id="post-nav-button">
         
-            <a href="/2019/04/06/Java编译期优化/" title="上一篇: Java早期(编译期)优化">
+            <a href="/2019/06/11/HTTPS的加密流程/" title="上一篇: ">
                 <i class="fa fa-angle-left"></i>
             </a>
         
         <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
         
-            <a href="/2019/03/15/Object源码剖析/" title="下一篇: Object源码剖析（顺带分析了notify/wait）">
+            <a href="/2019/05/18/一条SQL语句的执行流程/" title="下一篇: SQL语句的执行流程">
                 <i class="fa fa-angle-right"></i>
             </a>
         
