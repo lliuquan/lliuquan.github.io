@@ -20,7 +20,7 @@
 <meta property="og:image" content="c:/Users/liuquan/Downloads/未命名文件%20(6">
 <meta property="og:image" content="c:/Users/liuquan/Downloads/java%20(3">
 <meta property="og:image" content="c:/Users/liuquan/Downloads/java%20(4">
-<meta property="og:updated_time" content="2019-06-12T07:15:25.379Z">
+<meta property="og:updated_time" content="2019-06-12T07:49:04.909Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Mysql中的事务（一）">
 <meta name="twitter:description" content="本文主要讲解了Mysql的InnoDB引擎的事务的基础知识，以及redo日志的结构与实现，LSN的内容。本文参考资料见文末">
@@ -297,7 +297,7 @@
 </ul>
 <h4 id="（4）确保日志写入日志文件"><a href="#（4）确保日志写入日志文件" class="headerlink" title="（4）确保日志写入日志文件"></a>（4）确保日志写入日志文件</h4><p>​    当没有使用O_DIRECT的选项时，数据库会进行下图的做法（<strong>O_DIRECT选项是在Linux系统中的选项，使用该选项后，对文件进行直接IO操作，不经过文件系统缓存，直接写入磁盘</strong>）</p>
 <p><img src="C:\Users\liuquan\Downloads\未命名文件 (1" alt="未命名文件 (1)">.jpg)</p>
-<h4 id="（5）提高数据库的性能"><a href="#（5）提高数据库的性能" class="headerlink" title="（5）提高数据库的性能"></a>（5）提高数据库的性能</h4><p>​    我们知道写入磁盘的fsync操作十分耗费时间，那么为了提高性能，我们可以选择<strong>当事务提交的时候，日志不写入重做日志文件，而是等待一个时间周期后在执行fsync的操作，并非强制在事务提交前进行一次fsync操作。</strong></p>
+<h4 id="（5）提高数据库的性能"><a href="#（5）提高数据库的性能" class="headerlink" title="（5）提高数据库的性能"></a>（5）提高数据库的性能</h4><p>​    我们知道写入磁盘的fsync操作十分耗费时间，    那么为了提高性能，我们可以选择<strong>当事务提交的时候，日志不写入重做日志文件，而是等待一个时间周期后在执行fsync的操作，并非强制在事务提交前进行一次fsync操作。</strong></p>
 <p>​    缺点：当数据库宕机的时候，由于部分日志没有刷新到磁盘，会丢失最后一段时间的事务。</p>
 <p><img src="C:\Users\liuquan\Downloads\未命名文件 (3" alt="未命名文件 (3)">.jpg)</p>
 <p>​    但是需要记住的是，<strong>这种方法失去了事务的ACID的特性</strong>，<strong>在插入大批量的数据时，应该在插入完之后，进行一次commit操作，而不是插入一条后进行一次commit操作，这样做能够使事务方法在回滚的时候回滚到事务最开始的状态。</strong></p>
@@ -356,7 +356,7 @@
         <p><span>本文标题:</span><a href="/2019/06/09/Mysql技术内幕-事务(一)/">Mysql中的事务（一）</a></p>
         <p><span>文章作者:</span><a href="/" title="访问 Whits 的个人博客">Whits</a></p>
         <p><span>发布时间:</span>2019年06月09日 - 15时56分</p>
-        <p><span>最后更新:</span>2019年06月12日 - 15时15分</p>
+        <p><span>最后更新:</span>2019年06月12日 - 15时49分</p>
         <p>
             <span>原始链接:</span><a class="post-url" href="/2019/06/09/Mysql技术内幕-事务(一)/" title="Mysql中的事务（一）">http://yoursite.com/2019/06/09/Mysql技术内幕-事务(一)/</a>
             <span class="copy-path" data-clipboard-text="原文: http://yoursite.com/2019/06/09/Mysql技术内幕-事务(一)/　　作者: Whits" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
@@ -371,15 +371,6 @@
 
 
 <nav id="article-nav">
-  
-    <a href="/2019/06/11/HTTPS的加密流程/" id="article-nav-newer" class="article-nav-link-wrap">
-      <strong class="article-nav-caption"><</strong>
-      <div class="article-nav-title">
-        
-          (no title)
-        
-      </div>
-    </a>
   
   
     <a href="/2019/05/18/一条SQL语句的执行流程/" id="article-nav-older" class="article-nav-link-wrap">
@@ -445,9 +436,7 @@
 
     <div class="scroll" id="post-nav-button">
         
-            <a href="/2019/06/11/HTTPS的加密流程/" title="上一篇: ">
-                <i class="fa fa-angle-left"></i>
-            </a>
+            <a href="/" title="回到主页"><i class="fa fa-home"></i></a>
         
         <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
         
@@ -456,7 +445,7 @@
             </a>
         
     </div>
-    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019/06/11/HTTPS的加密流程/">HTTPS的加密流程</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/06/09/Mysql技术内幕-事务(一)/">Mysql中的事务（一）</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/18/一条SQL语句的执行流程/">SQL语句的执行流程</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/09/实现RSA加密，解密，签名/">实现RSA加密，解密，签名</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/09/Mysql数据库中的主键详解/">Mysql数据库中的主键详解</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/26/Mysql技术内幕-索引(二)/">Mysql之InnoDB的索引（二）</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/23/Mysql技术内幕-索引(一)/">Mysql之InnoDB的索引（一）</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/17/Java运行期优化(二)/">Java晚期(运行期)优化(二)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/14/Java运行期优化(一)/">Java晚期(运行期)优化(一)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/06/Java编译期优化/">Java早期(编译期)优化</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/23/String源码剖析/">String部分源码剖析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/15/Object源码剖析/">Object源码剖析（顺带分析了notify/wait）</a></li></ul>
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019/06/09/Mysql技术内幕-事务(一)/">Mysql中的事务（一）</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/18/一条SQL语句的执行流程/">SQL语句的执行流程</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/26/Mysql技术内幕-索引(二)/">Mysql之InnoDB的索引（二）</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/23/Mysql技术内幕-索引(一)/">Mysql之InnoDB的索引（一）</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/17/Java运行期优化(二)/">Java晚期(运行期)优化(二)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/14/Java运行期优化(一)/">Java晚期(运行期)优化(一)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/06/Java编译期优化/">Java早期(编译期)优化</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/23/String源码剖析/">String部分源码剖析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/15/Object源码剖析/">Object源码剖析（顺带分析了notify/wait）</a></li></ul>
     <script src="https://7.url.cn/edu/jslib/comb/require-2.1.6,jquery-1.9.1.min.js"></script>
     <script>
         $(".post-list").addClass("toc-article");
