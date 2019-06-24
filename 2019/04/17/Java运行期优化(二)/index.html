@@ -6,7 +6,7 @@
   <title>Java晚期(运行期)优化(二) | Whits&#39;s Blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta name="description" content="本文承接上文——Java晚期(运行期)优化(一)，主要讲解了Java代码的编译过程和运行期间的一些常用的编译优化技术，如公共子表达式的消除，数组边界检查的消除，方法内联等，本文参考资料见文末">
-<meta name="keywords" content="JVM,运行期">
+<meta name="keywords" content="运行期,JVM">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Java晚期(运行期)优化(二)">
 <meta property="og:url" content="http://yoursite.com/2019/04/17/Java运行期优化(二)/index.html">
@@ -14,7 +14,7 @@
 <meta property="og:description" content="本文承接上文——Java晚期(运行期)优化(一)，主要讲解了Java代码的编译过程和运行期间的一些常用的编译优化技术，如公共子表达式的消除，数组边界检查的消除，方法内联等，本文参考资料见文末">
 <meta property="og:locale" content="zh-Hans">
 <meta property="og:image" content="c:/Users/liuquan/AppData/Roaming/Typora/typora-user-images/1557298340071.png">
-<meta property="og:updated_time" content="2019-05-08T08:30:39.898Z">
+<meta property="og:updated_time" content="2019-06-24T06:37:00.267Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Java晚期(运行期)优化(二)">
 <meta name="twitter:description" content="本文承接上文——Java晚期(运行期)优化(一)，主要讲解了Java代码的编译过程和运行期间的一些常用的编译优化技术，如公共子表达式的消除，数组边界检查的消除，方法内联等，本文参考资料见文末">
@@ -144,7 +144,7 @@
                 
                 <section class="switch-part switch-part2">
                     <div class="widget tagcloud" id="js-tagcloud">
-                        <a href="/tags/B-树/" style="font-size: 15px;">B+树</a> <a href="/tags/JVM/" style="font-size: 20px;">JVM</a> <a href="/tags/Object/" style="font-size: 10px;">Object</a> <a href="/tags/SQL语句/" style="font-size: 10px;">SQL语句</a> <a href="/tags/String/" style="font-size: 10px;">String</a> <a href="/tags/Wait-Notify/" style="font-size: 10px;">Wait/Notify</a> <a href="/tags/事务/" style="font-size: 10px;">事务</a> <a href="/tags/源码/" style="font-size: 15px;">源码</a> <a href="/tags/索引/" style="font-size: 15px;">索引</a> <a href="/tags/编译期/" style="font-size: 10px;">编译期</a> <a href="/tags/运行期/" style="font-size: 15px;">运行期</a>
+                        <a href="/tags/B-树/" style="font-size: 15px;">B+树</a> <a href="/tags/JVM/" style="font-size: 20px;">JVM</a> <a href="/tags/Object/" style="font-size: 10px;">Object</a> <a href="/tags/SQL语句/" style="font-size: 10px;">SQL语句</a> <a href="/tags/Wait-Notify/" style="font-size: 10px;">Wait/Notify</a> <a href="/tags/事务/" style="font-size: 10px;">事务</a> <a href="/tags/源码/" style="font-size: 10px;">源码</a> <a href="/tags/索引/" style="font-size: 15px;">索引</a> <a href="/tags/编译期/" style="font-size: 10px;">编译期</a> <a href="/tags/运行期/" style="font-size: 15px;">运行期</a>
                     </div>
                 </section>
                 
@@ -168,6 +168,12 @@
                       <a target="_blank" class="main-nav-link switch-friends-link" href="http://ifeve.com/">并发编程网</a>
                     
                       <a target="_blank" class="main-nav-link switch-friends-link" href="https://wx.zsxq.com/dweb/#/login">知识星球</a>
+                    
+                      <a target="_blank" class="main-nav-link switch-friends-link" href="https://tech.meituan.com/">美团技术团队</a>
+                    
+                      <a target="_blank" class="main-nav-link switch-friends-link" href="https://colobu.com/">鸟窝</a>
+                    
+                      <a target="_blank" class="main-nav-link switch-friends-link" href="https://coolshell.cn/">酷壳</a>
                     
                     </div>
                 </section>
@@ -278,7 +284,7 @@
 <a id="more"></a>
 <the rest of contents | 余下全文>
 
-<h3 id="四-编译过程"><a href="#四-编译过程" class="headerlink" title="四.编译过程"></a>四.编译过程</h3><h5 id="允许后台编译："><a href="#允许后台编译：" class="headerlink" title="允许后台编译："></a><strong>允许后台编译：</strong></h5><p>在默认设置下，无论是方法调用产生的即时编译请求，还是 OSR 编译请求，<strong>虚拟机在代码编译器还未完成之前，都仍然将按照解释方式继续执行</strong>，而编译动作则在后台的编译线程中进行。</p>
+<h3 id="编译过程"><a href="#编译过程" class="headerlink" title="编译过程"></a>编译过程</h3><h5 id="允许后台编译："><a href="#允许后台编译：" class="headerlink" title="允许后台编译："></a><strong>允许后台编译：</strong></h5><p>在默认设置下，无论是方法调用产生的即时编译请求，还是 OSR 编译请求，<strong>虚拟机在代码编译器还未完成之前，都仍然将按照解释方式继续执行</strong>，而编译动作则在后台的编译线程中进行。</p>
 <h5 id="不允许后台编译："><a href="#不允许后台编译：" class="headerlink" title="不允许后台编译："></a><strong>不允许后台编译：</strong></h5><p>用户可以通过参数 -XX: -BackgroundCompilation 来禁止后台编译，<strong>但是仍然将按照解释方式继续执行</strong>，在禁止后台编译后，一旦达到 JIT 的编译条件，<strong>执行线程向虚拟机提交编译请求后将会一直等待</strong>，知道编译过程完成后再开始执行编译器输出的本地代码。</p>
 <p>Server Compiler 和 Client Compiler 两个编译器的编译过程是不一样的。</p>
 <h4 id="Client-Compiler-："><a href="#Client-Compiler-：" class="headerlink" title="Client Compiler ："></a><strong>Client Compiler ：</strong></h4><p>它是一个简单快速的一段式编译器，主要的关注点在于局部性的优化，而放弃了许多耗时较长的全局优化手段。</p>
@@ -292,13 +298,13 @@
 <p>​    它会执行<strong>所有经典的优化动作</strong>，如无用代码消除、循环展开（Loop Unrolling）、循环表达式外提、消除公共子表达式、常量传播、基本块重排序等。</p>
 <p>​    还会实施一些与 <strong>Java 语言特性密切相关的优化技术</strong>，如范围检查消除、空值检查消除等。</p>
 <p>​    另外，还可能根据解释器或 Client Compiler 提供的性能监控信息，进行一些<strong>不稳定的激进优化</strong>，如守护内联、分支频率预测等。</p>
-<h3 id="五-编译优化技术"><a href="#五-编译优化技术" class="headerlink" title="五.编译优化技术"></a>五.编译优化技术</h3><p>以编译方法执行本地代码比解释方式更快，即时编译器产生的本地代码会比javac产生的字节码更加优秀。原因如下：</p>
+<h3 id="编译优化技术"><a href="#编译优化技术" class="headerlink" title="编译优化技术"></a>编译优化技术</h3><p>以编译方法执行本地代码比解释方式更快，即时编译器产生的本地代码会比javac产生的字节码更加优秀。原因如下：</p>
 <ol>
 <li><strong>减少了虚拟机解释执行字节码时额外消耗时间</strong></li>
 <li><strong>虚拟机团队几乎把对所有代码的优化都集中在了即时编译器上</strong></li>
 </ol>
 <hr>
-<h4 id="（1）举一个普通的例子"><a href="#（1）举一个普通的例子" class="headerlink" title="（1）举一个普通的例子"></a>（1）举一个普通的例子</h4><p>下面是优化前原始代码：</p>
+<h4 id="举一个普通的例子"><a href="#举一个普通的例子" class="headerlink" title="举一个普通的例子"></a>举一个普通的例子</h4><p>下面是优化前原始代码：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">B</span></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> value;</span><br><span class="line">    <span class="function"><span class="keyword">final</span> <span class="keyword">int</span> <span class="title">get</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> value;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">foo</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    y = b.get();</span><br><span class="line">    <span class="comment">// ...do stuff...</span></span><br><span class="line">    z = b.get();</span><br><span class="line">    sum = y + z;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>​    这些代码优化变换是建立在代码的某种中间表示或机器码之上的，绝不是建立在Java 源码之上的，为了展示方便，笔者使用了 Java 语言的语法来表示这些优化技术所发挥的作用。代码已经非常简单了，但是仍然有许多优化的余地。</p>
 <h5 id="第一步进行方法内联"><a href="#第一步进行方法内联" class="headerlink" title="第一步进行方法内联"></a><strong>第一步进行方法内联</strong></h5><p>方法内联的重要性要高于其他优化措施，它的主要目的有两个：</p>
@@ -316,7 +322,7 @@
 <h5 id="第四步我们进行无用代码消除"><a href="#第四步我们进行无用代码消除" class="headerlink" title="第四步我们进行无用代码消除"></a><strong>第四步我们进行无用代码消除</strong></h5><p>无用代码可能是永远不会被执行的代码，也可能是完全没有意义的代码，因此，它又形象地称为 “Dead Code”，“y = y” 是没有意义的，把它消除。</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">foo</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    y = b.value;</span><br><span class="line">    <span class="comment">// ...do stuff...</span></span><br><span class="line">    sum = y + y;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>经过四次优化之后，原始代码与最后版本的代码所达到的效果是一致的，但是前者比后者省略了许多语句（体现在字节码和机器码指令上的差距会更大），执行效率也会更高。</p>
-<h4 id="（2）公共子表达式消除——与语言无关的经典优化技术"><a href="#（2）公共子表达式消除——与语言无关的经典优化技术" class="headerlink" title="（2）公共子表达式消除——与语言无关的经典优化技术"></a>（2）公共子表达式消除——与语言无关的经典优化技术</h4><p>公共子表达式消除是一个普遍应用于各种编译器的经典优化技术，它的含义是：<strong>如果一个表达式 E 已经计算过了，并且从先前的计算到现在 E 中所有变量的值都没有发生变化，那么 E 的这次出现就成为了公共子表达式。</strong></p>
+<h4 id="公共子表达式消除——与语言无关的经典优化技术"><a href="#公共子表达式消除——与语言无关的经典优化技术" class="headerlink" title="公共子表达式消除——与语言无关的经典优化技术"></a>公共子表达式消除——与语言无关的经典优化技术</h4><p>公共子表达式消除是一个普遍应用于各种编译器的经典优化技术，它的含义是：<strong>如果一个表达式 E 已经计算过了，并且从先前的计算到现在 E 中所有变量的值都没有发生变化，那么 E 的这次出现就成为了公共子表达式。</strong></p>
 <p>对于这种表达式，没有必要花时间再对它进行计算，只需要直接用前面计算过的表达式结果代替 E 就可以了。</p>
 <p>如果这种优化仅限于程序的基本块内，便称为<strong>局部公共子表达式消除</strong>（Local Common Subexpression Elimination）</p>
 <p>如果这种优化的范围涵盖了多个基本块，那就称为<strong>全局公共子表达式消除</strong>（Global Common Subexpression Elimination）</p>
@@ -328,7 +334,7 @@
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> d = E * <span class="number">12</span> + a + (a + E);</span><br></pre></td></tr></table></figure>
 <p>这时，编译器还可能（取决于那种虚拟机的编译器以及具体的上下文而定）进行另外一种优化：代数化简（Algebraic Simplification），把表达式变为</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> d = E * <span class="number">13</span> + a * <span class="number">2</span>;</span><br></pre></td></tr></table></figure>
-<h4 id="（3）数组边界检查消除——语言相关的经典优化技术"><a href="#（3）数组边界检查消除——语言相关的经典优化技术" class="headerlink" title="（3）数组边界检查消除——语言相关的经典优化技术"></a>（3）数组边界检查消除——语言相关的经典优化技术</h4><p>​    数组边界检查消除（Array Bounds Checking Elimination）是即时编译器中的一项语言相关的经典优化技术。我们知道 Java 语言是一门动态安全的语言，对数组的读写访问也不像 C、C++ 那样在本质上是裸指针操作。</p>
+<h4 id="数组边界检查消除——语言相关的经典优化技术"><a href="#数组边界检查消除——语言相关的经典优化技术" class="headerlink" title="数组边界检查消除——语言相关的经典优化技术"></a>数组边界检查消除——语言相关的经典优化技术</h4><p>​    数组边界检查消除（Array Bounds Checking Elimination）是即时编译器中的一项语言相关的经典优化技术。我们知道 Java 语言是一门动态安全的语言，对数组的读写访问也不像 C、C++ 那样在本质上是裸指针操作。</p>
 <p>​    如果有一个数组 foo[]，在 Java 语言中访问数组元素 foo[i] 的时候<strong>系统将会自动进行上下界的范围检查</strong>，即检查 i 必须满足 i &gt;= 0 &amp;&amp; i &lt; foo.length 这个条件，否则将会抛出一个运行时异常：java.lang.ArrayIndexOutOfBoundsException。</p>
 <p>​    这对软件开发者来说是一件很好的事情，即使程序员没有专门编写防御代码，也可以避免大部分的溢出攻击。但是对于虚拟机的执行子系统来说，<strong>每次数组元素的读写都带有一次隐含的条件判定操作，对于拥有大量数组访问的程序代码，这无疑也是一种性能负担。</strong></p>
 <hr>
@@ -348,13 +354,13 @@
 <p>​    虚拟机会注册一个 Segment Fault 信号的异常处理器（伪代码中的 uncommon_trap()），<strong>这样当 foo 不为空的时候，对 value 的访问是不会额外消耗一次对 foo 判空的开销的。</strong></p>
 <p>​    <strong>代价就是当 foo 真的为空时，必须转入到异常处理器中恢复并抛出 NullPointException 异常，这个过程必须从用户态转到内核态中处理，结束后再回到用户态，速度远比一次判空检查慢。</strong></p>
 <p>​    当 foo 极少为空的时候，隐式异常优化是值得的，但假如 foo 经常为空的话，这样的优化反而会让程序更慢，<strong>还好 HotSpot 虚拟机足够 “聪明”，它会根据运行期收集到的 Profile 信息自动选择最优方案。</strong></p>
-<h4 id="（4）方法内联——最重要的优化技术"><a href="#（4）方法内联——最重要的优化技术" class="headerlink" title="（4）方法内联——最重要的优化技术"></a>（4）方法内联——最重要的优化技术</h4><p>​    除了消除方法调用的成本之外，<strong>它更重要的意义是为其他优化手段建立良好的基础</strong></p>
+<h4 id="方法内联——最重要的优化技术"><a href="#方法内联——最重要的优化技术" class="headerlink" title="方法内联——最重要的优化技术"></a>方法内联——最重要的优化技术</h4><p>​    除了消除方法调用的成本之外，<strong>它更重要的意义是为其他优化手段建立良好的基础</strong></p>
 <p>​    例子就揭示了内联对其他优化手段的意义</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">foo</span> <span class="params">(Object obj)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (obj != <span class="keyword">null</span>) &#123;</span><br><span class="line">        System.out.println(<span class="string">"do something"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">testInline</span><span class="params">(String[]args)</span> </span>&#123;</span><br><span class="line">    Object obj = <span class="keyword">null</span>;</span><br><span class="line">    foo (obj);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>​    事实上 testInline() 方法的内部全部都是无用的代码，如果不做内联，后续即使进行了无用代码消除的优化，也无法发现任何 “Dead Code”，因为如果分开来看，foo() 和 testInline() 两个方法里面的操作都可能是有意义的。</p>
 <p>​    <strong>方法内联的优化行为看起来很简单，不过是把目标方法的代码 “复制” 到发起调用的方法之中，避免发生真实的方法调用而已。</strong>但实际上 Java 虚拟机中的内联过程远远没有那么简单，因为如果不是即时编译器做了一些特别的努力，按照经典编译原理的优化理论，大多数的 Java 方法都无法进行内联。</p>
 <p>​    无法内联的原因，请参考Java方法解析和分派调用。</p>
-<h4 id="（5）逃逸分析——最前沿的优化技术"><a href="#（5）逃逸分析——最前沿的优化技术" class="headerlink" title="（5）逃逸分析——最前沿的优化技术"></a>（5）逃逸分析——最前沿的优化技术</h4><p>​    它与类型继承关系分析一样，并不是直接优化代码的手段，<strong>而是为其他优化手段提供依据的分析技术。</strong></p>
+<h4 id="逃逸分析——最前沿的优化技术"><a href="#逃逸分析——最前沿的优化技术" class="headerlink" title="逃逸分析——最前沿的优化技术"></a>逃逸分析——最前沿的优化技术</h4><p>​    它与类型继承关系分析一样，并不是直接优化代码的手段，<strong>而是为其他优化手段提供依据的分析技术。</strong></p>
 <p>​    逃逸分析的基本行为<strong>就是分析对象动态作用域</strong>：</p>
 <p>​    当一个对象在方法中被定义后，它可能被外部方法所引用，例如作为调用参数传递到其他方法中，称为<strong>方法逃逸</strong>。</p>
 <p>​    甚至还有可能被外部线程访问到，譬如赋值给类变量或可以在其他线程中访问的实例变量，称为<strong>线程逃逸</strong>。</p>
@@ -382,7 +388,7 @@
         <p><span>本文标题:</span><a href="/2019/04/17/Java运行期优化(二)/">Java晚期(运行期)优化(二)</a></p>
         <p><span>文章作者:</span><a href="/" title="访问 Whits 的个人博客">Whits</a></p>
         <p><span>发布时间:</span>2019年04月17日 - 16时30分</p>
-        <p><span>最后更新:</span>2019年05月08日 - 16时30分</p>
+        <p><span>最后更新:</span>2019年06月24日 - 14时37分</p>
         <p>
             <span>原始链接:</span><a class="post-url" href="/2019/04/17/Java运行期优化(二)/" title="Java晚期(运行期)优化(二)">http://yoursite.com/2019/04/17/Java运行期优化(二)/</a>
             <span class="copy-path" data-clipboard-text="原文: http://yoursite.com/2019/04/17/Java运行期优化(二)/　　作者: Whits" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
@@ -420,7 +426,7 @@
 
     <div id="toc" class="toc-article">
     <strong class="toc-title">文章目录</strong>
-    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#四-编译过程"><span class="toc-number">1.</span> <span class="toc-text">四.编译过程</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#允许后台编译："><span class="toc-number">1.0.1.</span> <span class="toc-text">允许后台编译：</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#不允许后台编译："><span class="toc-number">1.0.2.</span> <span class="toc-text">不允许后台编译：</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Client-Compiler-："><span class="toc-number">1.1.</span> <span class="toc-text">Client Compiler ：</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#第一个阶段"><span class="toc-number">1.1.1.</span> <span class="toc-text">第一个阶段</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#第二个阶段"><span class="toc-number">1.1.2.</span> <span class="toc-text">第二个阶段</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#最后阶段"><span class="toc-number">1.1.3.</span> <span class="toc-text">最后阶段</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Server-Compiler"><span class="toc-number">1.2.</span> <span class="toc-text">Server Compiler</span></a></li></ol><li class="toc-item toc-level-3"><a class="toc-link" href="#五-编译优化技术"><span class="toc-number">2.</span> <span class="toc-text">五.编译优化技术</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#（1）举一个普通的例子"><span class="toc-number">2.1.</span> <span class="toc-text">（1）举一个普通的例子</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#第一步进行方法内联"><span class="toc-number">2.1.1.</span> <span class="toc-text">第一步进行方法内联</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#第二步进行冗余访问消除"><span class="toc-number">2.1.2.</span> <span class="toc-text">第二步进行冗余访问消除</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#第三步我们进行复写传播"><span class="toc-number">2.1.3.</span> <span class="toc-text">第三步我们进行复写传播</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#第四步我们进行无用代码消除"><span class="toc-number">2.1.4.</span> <span class="toc-text">第四步我们进行无用代码消除</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#（2）公共子表达式消除——与语言无关的经典优化技术"><span class="toc-number">2.2.</span> <span class="toc-text">（2）公共子表达式消除——与语言无关的经典优化技术</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#（3）数组边界检查消除——语言相关的经典优化技术"><span class="toc-number">2.3.</span> <span class="toc-text">（3）数组边界检查消除——语言相关的经典优化技术</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#（4）方法内联——最重要的优化技术"><span class="toc-number">2.4.</span> <span class="toc-text">（4）方法内联——最重要的优化技术</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#（5）逃逸分析——最前沿的优化技术"><span class="toc-number">2.5.</span> <span class="toc-text">（5）逃逸分析——最前沿的优化技术</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#栈上分配（Stack-Allocation）："><span class="toc-number">2.5.1.</span> <span class="toc-text">栈上分配（Stack Allocation）：</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#同步消除（Synchronized-Elimination）："><span class="toc-number">2.5.2.</span> <span class="toc-text">同步消除（Synchronized Elimination）：</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#标量替换（Scalar-Replacement）："><span class="toc-number">2.5.3.</span> <span class="toc-text">标量替换（Scalar Replacement）：</span></a></li></ol></li></ol></li>
+    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#编译过程"><span class="toc-number">1.</span> <span class="toc-text">编译过程</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#允许后台编译："><span class="toc-number">1.0.1.</span> <span class="toc-text">允许后台编译：</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#不允许后台编译："><span class="toc-number">1.0.2.</span> <span class="toc-text">不允许后台编译：</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Client-Compiler-："><span class="toc-number">1.1.</span> <span class="toc-text">Client Compiler ：</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#第一个阶段"><span class="toc-number">1.1.1.</span> <span class="toc-text">第一个阶段</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#第二个阶段"><span class="toc-number">1.1.2.</span> <span class="toc-text">第二个阶段</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#最后阶段"><span class="toc-number">1.1.3.</span> <span class="toc-text">最后阶段</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Server-Compiler"><span class="toc-number">1.2.</span> <span class="toc-text">Server Compiler</span></a></li></ol><li class="toc-item toc-level-3"><a class="toc-link" href="#编译优化技术"><span class="toc-number">2.</span> <span class="toc-text">编译优化技术</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#举一个普通的例子"><span class="toc-number">2.1.</span> <span class="toc-text">举一个普通的例子</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#第一步进行方法内联"><span class="toc-number">2.1.1.</span> <span class="toc-text">第一步进行方法内联</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#第二步进行冗余访问消除"><span class="toc-number">2.1.2.</span> <span class="toc-text">第二步进行冗余访问消除</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#第三步我们进行复写传播"><span class="toc-number">2.1.3.</span> <span class="toc-text">第三步我们进行复写传播</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#第四步我们进行无用代码消除"><span class="toc-number">2.1.4.</span> <span class="toc-text">第四步我们进行无用代码消除</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#公共子表达式消除——与语言无关的经典优化技术"><span class="toc-number">2.2.</span> <span class="toc-text">公共子表达式消除——与语言无关的经典优化技术</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#数组边界检查消除——语言相关的经典优化技术"><span class="toc-number">2.3.</span> <span class="toc-text">数组边界检查消除——语言相关的经典优化技术</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#方法内联——最重要的优化技术"><span class="toc-number">2.4.</span> <span class="toc-text">方法内联——最重要的优化技术</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#逃逸分析——最前沿的优化技术"><span class="toc-number">2.5.</span> <span class="toc-text">逃逸分析——最前沿的优化技术</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#栈上分配（Stack-Allocation）："><span class="toc-number">2.5.1.</span> <span class="toc-text">栈上分配（Stack Allocation）：</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#同步消除（Synchronized-Elimination）："><span class="toc-number">2.5.2.</span> <span class="toc-text">同步消除（Synchronized Elimination）：</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#标量替换（Scalar-Replacement）："><span class="toc-number">2.5.3.</span> <span class="toc-text">标量替换（Scalar Replacement）：</span></a></li></ol></li></ol></li>
 </div>
 <input type="button" id="tocButton" value="隐藏目录" title="点击按钮隐藏或者显示文章目录">
 
@@ -482,7 +488,7 @@
             </a>
         
     </div>
-    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019/06/09/Mysql技术内幕-事务(一)/">Mysql中的事务（一）</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/18/一条SQL语句的执行流程/">SQL语句的执行流程</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/26/Mysql技术内幕-索引(二)/">Mysql之InnoDB的索引（二）</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/23/Mysql技术内幕-索引(一)/">Mysql之InnoDB的索引（一）</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/17/Java运行期优化(二)/">Java晚期(运行期)优化(二)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/14/Java运行期优化(一)/">Java晚期(运行期)优化(一)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/06/Java编译期优化/">Java早期(编译期)优化</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/23/String源码剖析/">String部分源码剖析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/15/Object源码剖析/">Object源码剖析（顺带分析了notify/wait）</a></li></ul>
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019/06/09/Mysql技术内幕-事务(一)/">Mysql中的事务（一）</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/18/一条SQL语句的执行流程/">SQL语句的执行流程</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/26/Mysql技术内幕-索引(二)/">Mysql之InnoDB的索引（二）</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/23/Mysql技术内幕-索引(一)/">Mysql之InnoDB的索引（一）</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/17/Java运行期优化(二)/">Java晚期(运行期)优化(二)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/14/Java运行期优化(一)/">Java晚期(运行期)优化(一)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/06/Java编译期优化/">Java早期(编译期)优化</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/15/Object源码剖析/">Object源码剖析（顺带分析了notify/wait）</a></li></ul>
     <script src="https://7.url.cn/edu/jslib/comb/require-2.1.6,jquery-1.9.1.min.js"></script>
     <script>
         $(".post-list").addClass("toc-article");
