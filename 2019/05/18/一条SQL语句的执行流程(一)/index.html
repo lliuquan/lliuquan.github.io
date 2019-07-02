@@ -3,12 +3,12 @@
 <head><meta name="generator" content="Hexo 3.8.0">
   <meta charset="utf-8">
   
-  <title>SQL语句的执行流程 | Whits&#39;s Blog</title>
+  <title>SQL语句的执行流程（一） | Whits&#39;s Blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta name="description" content="本文简单介绍了Mysql的底层基础架构，比如连接器，分析器，优化器和存储引擎等，主要讲解了sql语句如何在Mysql中进行查询的一个流程，底层基础架构在其中做了什么工作。本文参考资料见文末">
 <meta name="keywords" content="SQL语句">
 <meta property="og:type" content="article">
-<meta property="og:title" content="SQL语句的执行流程">
+<meta property="og:title" content="SQL语句的执行流程（一）">
 <meta property="og:url" content="http://yoursite.com/2019/05/18/一条SQL语句的执行流程(一)/index.html">
 <meta property="og:site_name" content="Whits&#39;s Blog">
 <meta property="og:description" content="本文简单介绍了Mysql的底层基础架构，比如连接器，分析器，优化器和存储引擎等，主要讲解了sql语句如何在Mysql中进行查询的一个流程，底层基础架构在其中做了什么工作。本文参考资料见文末">
@@ -16,9 +16,9 @@
 <meta property="og:image" content="https://i.loli.net/2019/07/02/5d1ae0524a18465223.png">
 <meta property="og:image" content="https://i.loli.net/2019/07/02/5d1adfd12dd8a53293.png">
 <meta property="og:image" content="https://i.loli.net/2019/07/02/5d1af5e8ee87251762.png">
-<meta property="og:updated_time" content="2019-07-02T08:52:41.142Z">
+<meta property="og:updated_time" content="2019-07-02T09:21:27.260Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="SQL语句的执行流程">
+<meta name="twitter:title" content="SQL语句的执行流程（一）">
 <meta name="twitter:description" content="本文简单介绍了Mysql的底层基础架构，比如连接器，分析器，优化器和存储引擎等，主要讲解了sql语句如何在Mysql中进行查询的一个流程，底层基础架构在其中做了什么工作。本文参考资料见文末">
 <meta name="twitter:image" content="https://i.loli.net/2019/07/02/5d1ae0524a18465223.png">
   
@@ -146,7 +146,7 @@
                 
                 <section class="switch-part switch-part2">
                     <div class="widget tagcloud" id="js-tagcloud">
-                        <a href="/tags/B-树/" style="font-size: 15px;">B+树</a> <a href="/tags/JVM/" style="font-size: 20px;">JVM</a> <a href="/tags/Object/" style="font-size: 10px;">Object</a> <a href="/tags/SQL语句/" style="font-size: 10px;">SQL语句</a> <a href="/tags/Wait-Notify/" style="font-size: 10px;">Wait/Notify</a> <a href="/tags/事务/" style="font-size: 10px;">事务</a> <a href="/tags/源码/" style="font-size: 10px;">源码</a> <a href="/tags/索引/" style="font-size: 15px;">索引</a> <a href="/tags/编译期/" style="font-size: 10px;">编译期</a> <a href="/tags/运行期/" style="font-size: 15px;">运行期</a>
+                        <a href="/tags/B-树/" style="font-size: 15px;">B+树</a> <a href="/tags/JVM/" style="font-size: 20px;">JVM</a> <a href="/tags/Object/" style="font-size: 10px;">Object</a> <a href="/tags/SQL语句/" style="font-size: 15px;">SQL语句</a> <a href="/tags/Wait-Notify/" style="font-size: 10px;">Wait/Notify</a> <a href="/tags/事务/" style="font-size: 10px;">事务</a> <a href="/tags/源码/" style="font-size: 10px;">源码</a> <a href="/tags/索引/" style="font-size: 15px;">索引</a> <a href="/tags/编译期/" style="font-size: 10px;">编译期</a> <a href="/tags/运行期/" style="font-size: 15px;">运行期</a>
                     </div>
                 </section>
                 
@@ -255,7 +255,7 @@
         
   
     <h1 class="article-title" itemprop="name">
-      SQL语句的执行流程
+      SQL语句的执行流程（一）
     </h1>
   
 
@@ -420,12 +420,12 @@
   
     
     <div class="copyright">
-        <p><span>本文标题:</span><a href="/2019/05/18/一条SQL语句的执行流程(一)/">SQL语句的执行流程</a></p>
+        <p><span>本文标题:</span><a href="/2019/05/18/一条SQL语句的执行流程(一)/">SQL语句的执行流程（一）</a></p>
         <p><span>文章作者:</span><a href="/" title="访问 Whits 的个人博客">Whits</a></p>
         <p><span>发布时间:</span>2019年05月18日 - 17时33分</p>
-        <p><span>最后更新:</span>2019年07月02日 - 16时52分</p>
+        <p><span>最后更新:</span>2019年07月02日 - 17时21分</p>
         <p>
-            <span>原始链接:</span><a class="post-url" href="/2019/05/18/一条SQL语句的执行流程(一)/" title="SQL语句的执行流程">http://yoursite.com/2019/05/18/一条SQL语句的执行流程(一)/</a>
+            <span>原始链接:</span><a class="post-url" href="/2019/05/18/一条SQL语句的执行流程(一)/" title="SQL语句的执行流程（一）">http://yoursite.com/2019/05/18/一条SQL语句的执行流程(一)/</a>
             <span class="copy-path" data-clipboard-text="原文: http://yoursite.com/2019/05/18/一条SQL语句的执行流程(一)/　　作者: Whits" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
             <script src="/js/clipboard.min.js"></script>
             <script> var clipboard = new Clipboard('.copy-path'); </script>
@@ -523,7 +523,7 @@
             </a>
         
     </div>
-    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019/07/02/一条SQL语句的执行流程(二)/">一条SQL语句的执行流程(二)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/06/09/Mysql技术内幕-事务(一)/">Mysql中的事务（一）</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/18/一条SQL语句的执行流程(一)/">SQL语句的执行流程</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/26/Mysql技术内幕-索引(二)/">Mysql之InnoDB的索引（二）</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/23/Mysql技术内幕-索引(一)/">Mysql之InnoDB的索引（一）</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/17/Java运行期优化(二)/">Java晚期(运行期)优化(二)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/14/Java运行期优化(一)/">Java晚期(运行期)优化(一)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/06/Java编译期优化/">Java早期(编译期)优化</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/15/Object源码剖析/">Object源码剖析（顺带分析了notify/wait）</a></li></ul>
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019/06/30/一条SQL语句的执行流程(二)/">SQL语句的执行流程（二）</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/06/09/Mysql技术内幕-事务(一)/">Mysql中的事务（一）</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/18/一条SQL语句的执行流程(一)/">SQL语句的执行流程（一）</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/26/Mysql技术内幕-索引(二)/">Mysql之InnoDB的索引（二）</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/23/Mysql技术内幕-索引(一)/">Mysql之InnoDB的索引（一）</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/17/Java运行期优化(二)/">Java晚期(运行期)优化(二)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/14/Java运行期优化(一)/">Java晚期(运行期)优化(一)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/06/Java编译期优化/">Java早期(编译期)优化</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/15/Object源码剖析/">Object源码剖析（顺带分析了notify/wait）</a></li></ul>
     <script src="https://7.url.cn/edu/jslib/comb/require-2.1.6,jquery-1.9.1.min.js"></script>
     <script>
         $(".post-list").addClass("toc-article");

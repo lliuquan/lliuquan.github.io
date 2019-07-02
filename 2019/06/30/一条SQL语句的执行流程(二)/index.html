@@ -3,14 +3,15 @@
 <head><meta name="generator" content="Hexo 3.8.0">
   <meta charset="utf-8">
   
-  <title>Whits&#39;s Blog</title>
+  <title>SQL语句的执行流程（二） | Whits&#39;s Blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="SQL语句中的执行流程一般的 Sql 语句可以分为2种，一种是查询，一种是更新(增加，更新，删除)，更新操作的时候，会涉及到事务。 SQL语句中关键字的执行顺序： FROM和JOIN  首先执行该FROM子句和后续步骤JOIN以确定正在查询的数据的总工作集。这包括此子句中的子查询，并且可以导致在引擎盖下创建临时表，其中包含要连接的表的所有列和行。  WHERE  一旦我们拥有了总工作数据集，就会将">
+  <meta name="description" content="本文简单介绍了SQL语句中的执行流程中 FROM， GROUP By 等关键字的执行顺序，以及 redo log 与 bing log的简单使用，还有两阶段提交">
+<meta name="keywords" content="SQL语句">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Whits&#39;s Blog">
-<meta property="og:url" content="http://yoursite.com/2019/07/02/一条SQL语句的执行流程(二)/index.html">
+<meta property="og:title" content="SQL语句的执行流程（二）">
+<meta property="og:url" content="http://yoursite.com/2019/06/30/一条SQL语句的执行流程(二)/index.html">
 <meta property="og:site_name" content="Whits&#39;s Blog">
-<meta property="og:description" content="SQL语句中的执行流程一般的 Sql 语句可以分为2种，一种是查询，一种是更新(增加，更新，删除)，更新操作的时候，会涉及到事务。 SQL语句中关键字的执行顺序： FROM和JOIN  首先执行该FROM子句和后续步骤JOIN以确定正在查询的数据的总工作集。这包括此子句中的子查询，并且可以导致在引擎盖下创建临时表，其中包含要连接的表的所有列和行。  WHERE  一旦我们拥有了总工作数据集，就会将">
+<meta property="og:description" content="本文简单介绍了SQL语句中的执行流程中 FROM， GROUP By 等关键字的执行顺序，以及 redo log 与 bing log的简单使用，还有两阶段提交">
 <meta property="og:locale" content="zh-Hans">
 <meta property="og:image" content="https://i.loli.net/2019/07/02/5d1af70289cd492558.png">
 <meta property="og:image" content="https://i.loli.net/2019/07/02/5d1af743a280374205.png">
@@ -22,10 +23,10 @@
 <meta property="og:image" content="https://i.loli.net/2019/07/02/5d1b146e486ad41734.png">
 <meta property="og:image" content="https://i.loli.net/2019/07/02/5d1afc691442976832.png">
 <meta property="og:image" content="https://i.loli.net/2019/07/02/5d1afeff3a03f51448.png">
-<meta property="og:updated_time" content="2019-07-02T08:26:37.953Z">
+<meta property="og:updated_time" content="2019-07-02T09:21:54.790Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Whits&#39;s Blog">
-<meta name="twitter:description" content="SQL语句中的执行流程一般的 Sql 语句可以分为2种，一种是查询，一种是更新(增加，更新，删除)，更新操作的时候，会涉及到事务。 SQL语句中关键字的执行顺序： FROM和JOIN  首先执行该FROM子句和后续步骤JOIN以确定正在查询的数据的总工作集。这包括此子句中的子查询，并且可以导致在引擎盖下创建临时表，其中包含要连接的表的所有列和行。  WHERE  一旦我们拥有了总工作数据集，就会将">
+<meta name="twitter:title" content="SQL语句的执行流程（二）">
+<meta name="twitter:description" content="本文简单介绍了SQL语句中的执行流程中 FROM， GROUP By 等关键字的执行顺序，以及 redo log 与 bing log的简单使用，还有两阶段提交">
 <meta name="twitter:image" content="https://i.loli.net/2019/07/02/5d1af70289cd492558.png">
   
     <link rel="alternative" href="/atom.xml" title="Whits&#39;s Blog" type="application/atom+xml">
@@ -152,7 +153,7 @@
                 
                 <section class="switch-part switch-part2">
                     <div class="widget tagcloud" id="js-tagcloud">
-                        <a href="/tags/B-树/" style="font-size: 15px;">B+树</a> <a href="/tags/JVM/" style="font-size: 20px;">JVM</a> <a href="/tags/Object/" style="font-size: 10px;">Object</a> <a href="/tags/SQL语句/" style="font-size: 10px;">SQL语句</a> <a href="/tags/Wait-Notify/" style="font-size: 10px;">Wait/Notify</a> <a href="/tags/事务/" style="font-size: 10px;">事务</a> <a href="/tags/源码/" style="font-size: 10px;">源码</a> <a href="/tags/索引/" style="font-size: 15px;">索引</a> <a href="/tags/编译期/" style="font-size: 10px;">编译期</a> <a href="/tags/运行期/" style="font-size: 15px;">运行期</a>
+                        <a href="/tags/B-树/" style="font-size: 15px;">B+树</a> <a href="/tags/JVM/" style="font-size: 20px;">JVM</a> <a href="/tags/Object/" style="font-size: 10px;">Object</a> <a href="/tags/SQL语句/" style="font-size: 15px;">SQL语句</a> <a href="/tags/Wait-Notify/" style="font-size: 10px;">Wait/Notify</a> <a href="/tags/事务/" style="font-size: 10px;">事务</a> <a href="/tags/源码/" style="font-size: 10px;">源码</a> <a href="/tags/索引/" style="font-size: 15px;">索引</a> <a href="/tags/编译期/" style="font-size: 10px;">编译期</a> <a href="/tags/运行期/" style="font-size: 15px;">运行期</a>
                     </div>
                 </section>
                 
@@ -247,8 +248,8 @@
       <div class="body-wrap"><article id="post-一条SQL语句的执行流程(二)" class="article article-type-post" itemscope itemprop="blogPost">
   
     <div class="article-meta">
-      <a href="/2019/07/02/一条SQL语句的执行流程(二)/" class="article-date">
-      <time datetime="2019-07-02T06:21:39.204Z" itemprop="datePublished">2019-07-02</time>
+      <a href="/2019/06/30/一条SQL语句的执行流程(二)/" class="article-date">
+      <time datetime="2019-06-30T09:21:18.000Z" itemprop="datePublished">2019-06-30</time>
 </a>
     </div>
   
@@ -257,10 +258,42 @@
       <input type="hidden" class="isFancy">
     
     
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      SQL语句的执行流程（二）
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+    <div class="article-category tagcloud">
+    <a class="article-category-link" href="/categories/Mysql/">Mysql</a>
+    </div>
+
+
+        
+    <div class="article-tag tagcloud">
+        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/SQL语句/">SQL语句</a></li></ul>
+    </div>
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
     <div class="article-entry" itemprop="articleBody">
       
           
-        <h3 id="SQL语句中的执行流程"><a href="#SQL语句中的执行流程" class="headerlink" title="SQL语句中的执行流程"></a>SQL语句中的执行流程</h3><p>一般的 Sql 语句可以分为2种，<strong>一种是查询，一种是更新(增加，更新，删除)，更新操作的时候，会涉及到事务。</strong></p>
+        <excerpt in index | 首页摘要> 
+
+<p>本文简单介绍了SQL语句中的执行流程中 FROM， GROUP By 等关键字的执行顺序，以及 redo log 与 bing log的简单使用，还有两阶段提交</p>
+<a id="more"></a>
+<the rest of contents | 余下全文>
+
+<h3 id="SQL语句中的执行流程"><a href="#SQL语句中的执行流程" class="headerlink" title="SQL语句中的执行流程"></a>SQL语句中的执行流程</h3><p>一般的 Sql 语句可以分为2种，<strong>一种是查询，一种是更新(增加，更新，删除)，更新操作的时候，会涉及到事务。</strong></p>
 <h4 id="SQL语句中关键字的执行顺序："><a href="#SQL语句中关键字的执行顺序：" class="headerlink" title="SQL语句中关键字的执行顺序："></a>SQL语句中关键字的执行顺序：</h4><ol>
 <li><code>FROM</code>和<code>JOIN</code></li>
 </ol>
@@ -451,7 +484,7 @@
 <p><a href="https://www.designcise.com/web/tutorial/what-is-the-order-of-execution-of-an-sql-query" target="_blank" rel="noopener">https://www.designcise.com/web/tutorial/what-is-the-order-of-execution-of-an-sql-query</a></p>
 <p><a href="https://dbaplus.cn/news-155-1531-1.html" target="_blank" rel="noopener">https://dbaplus.cn/news-155-1531-1.html</a></p>
 <p><a href="https://www.cnblogs.com/cdf-opensource-007/p/6502556.html" target="_blank" rel="noopener">https://www.cnblogs.com/cdf-opensource-007/p/6502556.html</a></p>
-
+</the></excerpt>
       
       
     </div>
@@ -460,13 +493,13 @@
   
     
     <div class="copyright">
-        <p><span>本文标题:</span><a href="/2019/07/02/一条SQL语句的执行流程(二)/"></a></p>
+        <p><span>本文标题:</span><a href="/2019/06/30/一条SQL语句的执行流程(二)/">SQL语句的执行流程（二）</a></p>
         <p><span>文章作者:</span><a href="/" title="访问 Whits 的个人博客">Whits</a></p>
-        <p><span>发布时间:</span>2019年07月02日 - 14时21分</p>
-        <p><span>最后更新:</span>2019年07月02日 - 16时26分</p>
+        <p><span>发布时间:</span>2019年06月30日 - 17时21分</p>
+        <p><span>最后更新:</span>2019年07月02日 - 17时21分</p>
         <p>
-            <span>原始链接:</span><a class="post-url" href="/2019/07/02/一条SQL语句的执行流程(二)/" title>http://yoursite.com/2019/07/02/一条SQL语句的执行流程(二)/</a>
-            <span class="copy-path" data-clipboard-text="原文: http://yoursite.com/2019/07/02/一条SQL语句的执行流程(二)/　　作者: Whits" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <span>原始链接:</span><a class="post-url" href="/2019/06/30/一条SQL语句的执行流程(二)/" title="SQL语句的执行流程（二）">http://yoursite.com/2019/06/30/一条SQL语句的执行流程(二)/</a>
+            <span class="copy-path" data-clipboard-text="原文: http://yoursite.com/2019/06/30/一条SQL语句的执行流程(二)/　　作者: Whits" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
             <script src="/js/clipboard.min.js"></script>
             <script> var clipboard = new Clipboard('.copy-path'); </script>
         </p>
@@ -552,7 +585,7 @@
             </a>
         
     </div>
-    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019/07/02/一条SQL语句的执行流程(二)/">一条SQL语句的执行流程(二)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/06/09/Mysql技术内幕-事务(一)/">Mysql中的事务（一）</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/18/一条SQL语句的执行流程(一)/">SQL语句的执行流程</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/26/Mysql技术内幕-索引(二)/">Mysql之InnoDB的索引（二）</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/23/Mysql技术内幕-索引(一)/">Mysql之InnoDB的索引（一）</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/17/Java运行期优化(二)/">Java晚期(运行期)优化(二)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/14/Java运行期优化(一)/">Java晚期(运行期)优化(一)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/06/Java编译期优化/">Java早期(编译期)优化</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/15/Object源码剖析/">Object源码剖析（顺带分析了notify/wait）</a></li></ul>
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019/06/30/一条SQL语句的执行流程(二)/">SQL语句的执行流程（二）</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/06/09/Mysql技术内幕-事务(一)/">Mysql中的事务（一）</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/18/一条SQL语句的执行流程(一)/">SQL语句的执行流程（一）</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/26/Mysql技术内幕-索引(二)/">Mysql之InnoDB的索引（二）</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/23/Mysql技术内幕-索引(一)/">Mysql之InnoDB的索引（一）</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/17/Java运行期优化(二)/">Java晚期(运行期)优化(二)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/14/Java运行期优化(一)/">Java晚期(运行期)优化(一)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/06/Java编译期优化/">Java早期(编译期)优化</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/15/Object源码剖析/">Object源码剖析（顺带分析了notify/wait）</a></li></ul>
     <script src="https://7.url.cn/edu/jslib/comb/require-2.1.6,jquery-1.9.1.min.js"></script>
     <script>
         $(".post-list").addClass("toc-article");
