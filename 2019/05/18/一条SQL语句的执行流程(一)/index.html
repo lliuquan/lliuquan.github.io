@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="utf-8">
+  
+  <title>SQL语句的执行流程 | Whits&#39;s Blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="本文简单介绍了Mysql的底层基础架构，比如连接器，分析器，优化器和存储引擎等，主要讲解了sql语句如何在Mysql中进行查询的一个流程，底层基础架构在其中做了什么工作。本文参考资料见文末">
+<meta name="keywords" content="SQL语句">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SQL语句的执行流程">
+<meta property="og:url" content="http://yoursite.com/2019/05/18/一条SQL语句的执行流程(一)/index.html">
+<meta property="og:site_name" content="Whits&#39;s Blog">
+<meta property="og:description" content="本文简单介绍了Mysql的底层基础架构，比如连接器，分析器，优化器和存储引擎等，主要讲解了sql语句如何在Mysql中进行查询的一个流程，底层基础架构在其中做了什么工作。本文参考资料见文末">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://i.loli.net/2019/07/02/5d1ae0524a18465223.png">
+<meta property="og:image" content="https://i.loli.net/2019/07/02/5d1adfd12dd8a53293.png">
+<meta property="og:image" content="https://i.loli.net/2019/07/02/5d1af5e8ee87251762.png">
+<meta property="og:updated_time" content="2019-07-02T08:52:41.142Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="SQL语句的执行流程">
+<meta name="twitter:description" content="本文简单介绍了Mysql的底层基础架构，比如连接器，分析器，优化器和存储引擎等，主要讲解了sql语句如何在Mysql中进行查询的一个流程，底层基础架构在其中做了什么工作。本文参考资料见文末">
+<meta name="twitter:image" content="https://i.loli.net/2019/07/02/5d1ae0524a18465223.png">
+  
+    <link rel="alternative" href="/atom.xml" title="Whits&#39;s Blog" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/img/favicon.png">
+  
+  
+      <link rel="stylesheet" href="//cdn.bootcss.com/animate.css/3.5.0/animate.min.css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/font-awesome/css/font-awesome.min.css">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  
+  
+      <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  
+  <!-- 加载特效 -->
+    <script src="/js/pace.js"></script>
+    <link href="/css/pace/pace-theme-flash.css" rel="stylesheet">
+  <script>
+      var yiliaConfig = {
+          rootUrl: '/',
+          fancybox: true,
+          animate: true,
+          isHome: false,
+          isPost: true,
+          isArchive: false,
+          isTag: false,
+          isCategory: false,
+          open_in_new: false
+      }
+  </script>
+</head></html>
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+    <header id="header" class="inner">
+        <a href="/" class="profilepic">
+            
+            <img lazy-src="/img/head.jpg" class="js-avatar">
+            
+        </a>
+
+        <hgroup>
+          <h1 class="header-author"><a href="/" title="Hi Mate">Whits</a></h1>
+        </hgroup>
+
+        
+        <p class="header-subtitle">just do it</p>
+        
+        
+        
+            <div id="switch-btn" class="switch-btn">
+                <div class="icon">
+                    <div class="icon-ctn">
+                        <div class="icon-wrap icon-house" data-idx="0">
+                            <div class="birdhouse"></div>
+                            <div class="birdhouse_holes"></div>
+                        </div>
+                        <div class="icon-wrap icon-ribbon hide" data-idx="1">
+                            <div class="ribbon"></div>
+                        </div>
+                        
+                        <div class="icon-wrap icon-link hide" data-idx="2">
+                            <div class="loopback_l"></div>
+                            <div class="loopback_r"></div>
+                        </div>
+                        
+                        
+                        <div class="icon-wrap icon-me hide" data-idx="3">
+                            <div class="user"></div>
+                            <div class="shoulder"></div>
+                        </div>
+                        
+                    </div>
+                    
+                </div>
+                <div class="tips-box hide">
+                    <div class="tips-arrow"></div>
+                    <ul class="tips-inner">
+                        <li>菜单</li>
+                        <li>标签</li>
+                        
+                        <li>友情链接</li>
+                        
+                        
+                        <li>关于我</li>
+                        
+                    </ul>
+                </div>
+            </div>
+        
+
+        <div id="switch-area" class="switch-area">
+            <div class="switch-wrap">
+                <section class="switch-part switch-part1">
+                    <nav class="header-menu">
+                        <ul>
+                        
+                            <li><a href="/works">作品展示</a></li>
+                        
+                            <li><a href="/tags">标签</a></li>
+                        
+                            <li><a href="/categories">分类</a></li>
+                        
+                        </ul>
+                    </nav>
+                    <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fl mail" target="_blank" href="mailto:780101896@qq.com" title="mail">mail</a>
+                            
+                                <a class="fl github" target="_blank" href="https://github.com/lliuquan" title="github">github</a>
+                            
+                                <a class="fl zhihu" target="_blank" href="https://www.zhihu.com/people/liu-quan-7-71/activities" title="zhihu">zhihu</a>
+                            
+                        </ul>
+                    </nav>
+                </section>
+                
+                
+                <section class="switch-part switch-part2">
+                    <div class="widget tagcloud" id="js-tagcloud">
+                        <a href="/tags/B-树/" style="font-size: 15px;">B+树</a> <a href="/tags/JVM/" style="font-size: 20px;">JVM</a> <a href="/tags/Object/" style="font-size: 10px;">Object</a> <a href="/tags/SQL语句/" style="font-size: 10px;">SQL语句</a> <a href="/tags/Wait-Notify/" style="font-size: 10px;">Wait/Notify</a> <a href="/tags/事务/" style="font-size: 10px;">事务</a> <a href="/tags/源码/" style="font-size: 10px;">源码</a> <a href="/tags/索引/" style="font-size: 15px;">索引</a> <a href="/tags/编译期/" style="font-size: 10px;">编译期</a> <a href="/tags/运行期/" style="font-size: 15px;">运行期</a>
+                    </div>
+                </section>
+                
+                
+                
+                <section class="switch-part switch-part3">
+                    <div id="js-friends">
+                    
+                      <a target="_blank" class="main-nav-link switch-friends-link" href="https://www.v2ex.com/">V2ex</a>
+                    
+                      <a target="_blank" class="main-nav-link switch-friends-link" href="https://segmentfault.com/">Segmentfault</a>
+                    
+                      <a target="_blank" class="main-nav-link switch-friends-link" href="https://stackoverflow.com/">Stackoverflow</a>
+                    
+                      <a target="_blank" class="main-nav-link switch-friends-link" href="https://www.hollischuang.com/">Hollis</a>
+                    
+                      <a target="_blank" class="main-nav-link switch-friends-link" href="http://www.iocoder.cn/?csdn">芋道源码</a>
+                    
+                      <a target="_blank" class="main-nav-link switch-friends-link" href="https://www.nowcoder.com/5810854">牛客</a>
+                    
+                      <a target="_blank" class="main-nav-link switch-friends-link" href="http://ifeve.com/">并发编程网</a>
+                    
+                      <a target="_blank" class="main-nav-link switch-friends-link" href="https://wx.zsxq.com/dweb/#/login">知识星球</a>
+                    
+                      <a target="_blank" class="main-nav-link switch-friends-link" href="https://tech.meituan.com/">美团技术团队</a>
+                    
+                      <a target="_blank" class="main-nav-link switch-friends-link" href="https://colobu.com/">鸟窝</a>
+                    
+                      <a target="_blank" class="main-nav-link switch-friends-link" href="https://coolshell.cn/">酷壳</a>
+                    
+                    </div>
+                </section>
+                
+
+                
+                
+                <section class="switch-part switch-part4">
+                
+                    <div id="js-aboutme">NBA、半个历史爱好者、编程学习者、运动爱好者、在校学生</div>
+                </section>
+                
+            </div>
+        </div>
+    </header>                
+</div>
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+      <div class="overlay">
+          <div class="slider-trigger"></div>
+          <h1 class="header-author js-mobile-header hide"><a href="/" title="Me">Whits</a></h1>
+      </div>
+    <div class="intrude-less">
+        <header id="header" class="inner">
+            <a href="/" class="profilepic">
+                
+                    <img lazy-src="/img/head.jpg" class="js-avatar">
+                
+            </a>
+            <hgroup>
+              <h1 class="header-author"><a href="/" title="Me">Whits</a></h1>
+            </hgroup>
+            
+            <p class="header-subtitle">just do it</p>
+            
+            <nav class="header-menu">
+                <ul>
+                
+                    <li><a href="/works">作品展示</a></li>
+                
+                    <li><a href="/tags">标签</a></li>
+                
+                    <li><a href="/categories">分类</a></li>
+                
+                <div class="clearfix"></div>
+                </ul>
+            </nav>
+            <nav class="header-nav">
+                <div class="social">
+                    
+                        <a class="mail" target="_blank" href="mailto:780101896@qq.com" title="mail">mail</a>
+                    
+                        <a class="github" target="_blank" href="https://github.com/lliuquan" title="github">github</a>
+                    
+                        <a class="zhihu" target="_blank" href="https://www.zhihu.com/people/liu-quan-7-71/activities" title="zhihu">zhihu</a>
+                    
+                </div>
+            </nav>
+        </header>                
+    </div>
+</nav>
+      <div class="body-wrap"><article id="post-一条SQL语句的执行流程(一)" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2019/05/18/一条SQL语句的执行流程(一)/" class="article-date">
+      <time datetime="2019-05-18T09:33:29.000Z" itemprop="datePublished">2019-05-18</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      SQL语句的执行流程
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+    <div class="article-category tagcloud">
+    <a class="article-category-link" href="/categories/Mysql/">Mysql</a>
+    </div>
+
+
+        
+    <div class="article-tag tagcloud">
+        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/SQL语句/">SQL语句</a></li></ul>
+    </div>
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          
+        <excerpt in index | 首页摘要> 
+
+<p>本文简单介绍了Mysql的底层基础架构，比如<strong>连接器，分析器，优化器和存储引擎</strong>等，<strong>主要讲解了sql语句如何在Mysql中进行查询的一个流程</strong>，底层基础架构在其中做了什么工作。本文参考资料见文末</p>
+<a id="more"></a>
+<the rest of contents | 余下全文>
+
+<h3 id="Mysql的简要架构"><a href="#Mysql的简要架构" class="headerlink" title="Mysql的简要架构"></a>Mysql的简要架构</h3><p>​    Mysql主要分为<strong>Server层和存储引擎层</strong>，其中还有很多其他的组件</p>
+<p><img src="https://i.loli.net/2019/07/02/5d1ae0524a18465223.png" alt="1557475473179"></p>
+<h4 id="Server层："><a href="#Server层：" class="headerlink" title="Server层："></a><strong>Server层：</strong></h4><h5 id="连接器组件"><a href="#连接器组件" class="headerlink" title="连接器组件"></a><strong>连接器组件</strong></h5><p>​    <strong>连接命令中的 mysql 是客户端工具，用来跟服务端建立连接。在完成经典的 TCP 三次握手后，连接器就要开始认证你的身份，这个时候用的就是你输入的用户名和密码。</strong></p>
+<ul>
+<li>如果用户名或密码不对，你就会收到一个 “Access denied for user” 的错误，然后客户端程序结束执行。</li>
+<li>如果用户名密码认证通过，连接器会到权限表里面查出你拥有的权限。之后，这个连接里面的权限判断逻辑，都将依赖于此时读到的权限。</li>
+</ul>
+<p><strong>建立连接之后：</strong></p>
+<ol>
+<li><strong>一个用户成功建立连接后，即使你用管理员账号对这个用户的权限做了修改，也不会影响已经存在连接的权限。修改完成后，只有再新建的连接才会使用新的权限设置。</strong></li>
+<li>如果你没有后续的动作，这个连接就处于空闲状态，你可以在 show processlist 命令中看到它。下图是 show processlist 的结果，其中的 Command 列显示为“Sleep”的这一行，就表示现在系统里面有一个空闲连接。</li>
+<li>客户端如果太长时间没动静，连接器就会自动将它断开。<strong>这个时间是由参数 wait_timeout 控制的，默认值是 8 小时.</strong></li>
+<li>如果在连接被断开之后，客户端再次发送请求的话，就会收到一个错误提醒： <strong>Lost connection to MySQL server during query</strong>。这时候如果你要继续，就需要重连，然后再执行请求了。</li>
+</ol>
+<p><img src="https://i.loli.net/2019/07/02/5d1adfd12dd8a53293.png" alt="https://i.loli.net/2019/07/02/5d1adfd12dd8a53293.png"></p>
+<p><strong>数据库中的长连接与短连接</strong></p>
+<ol>
+<li>数据库里面，长连接是指连接成功后，如果客户端持续有请求，则一直使用同一个连接。</li>
+<li>短连接则是指每次执行完很少的几次查询就断开连接，下次查询再重新建立一个。</li>
+<li>建立连接的过程通常是比较复杂的，所以我建议你在使用中要尽量减少建立连接的动作，也就是尽量使用长连接。</li>
+</ol>
+<p><strong>长连接存在的问题</strong></p>
+<blockquote>
+<p>但是全部使用长连接后，你可能会发现，有些时候 MySQL 占用内存涨得特别快，这是因为 MySQL 在执行过程中临时使用的内存是管理在连接对象里面的。</p>
+<p>这些资源会在连接断开的时候才释放。所以如果长连接累积下来，可能导致内存占用太大，被系统强行杀掉（OOM），<strong>从现象看就是 MySQL 异常重启了。</strong></p>
+<p>怎么解决这个问题呢？你可以考虑以下两种方案。</p>
+<ol>
+<li><strong>定期断开长连接。</strong>使用一段时间，或者程序里面判断执行过一个占用内存的大查询后，断开连接，之后要查询再重连。</li>
+<li>如果你用的是 MySQL 5.7 或更新版本，<strong>可以在每次执行一个比较大的操作后，通过执行 mysql_reset_connection 来重新初始化连接资源。</strong>这个过程不需要重连和重新做权限验证，但是会将连接恢复到刚刚创建完时的状态。</li>
+</ol>
+</blockquote>
+<h5 id="查询缓存-Mysql-8-0-已经去除这个模块"><a href="#查询缓存-Mysql-8-0-已经去除这个模块" class="headerlink" title="查询缓存(Mysql 8.0 已经去除这个模块)"></a><strong>查询缓存(Mysql 8.0 已经去除这个模块)</strong></h5><p><strong>查询缓存的流程</strong></p>
+<blockquote>
+<ol>
+<li>连接建立后，执行查询语句的时候，会先查询缓存。</li>
+<li>Mysql会先校验这个sql是否执行过，以Key-Value的形式缓存在内存中，Key是查询预计，Value是结果集。</li>
+<li>如果缓存key被命中，就会直接返回给客户端</li>
+<li>如果没有命中，就会执行后续的操作，完成后也会把结果缓存起来，方便下一次调用。</li>
+</ol>
+</blockquote>
+<p><strong>不建议使用查询缓存，因为通常会弊大于利</strong></p>
+<blockquote>
+<p>​    查询缓存的失效非常频繁，<strong>只要有对一个表的更新，这个表上所有的查询缓存都会被清空。</strong>因此很可能你费劲地把结果存起来，还没使用呢，就被一个更新全清空了。对于更新压力大的数据库来说，查询缓存的命中率会非常低。</p>
+<p>​    <strong>除非你的业务就是有一张静态表，很长时间才会更新一次。</strong>比如，一个系统配置表，那这张表上的查询才适合使用查询缓存。</p>
+</blockquote>
+<p><strong>按需进行查询缓存</strong></p>
+<blockquote>
+<p> MySQL 也提供了这种“按需使用”的方式。你可以将参数 query_cache_type 设置 成 DEMAND，这样对于默认的 SQL 语句都不使用查询缓存。而对于你确定要使用查询缓 存的语句，可以用 SQL_CACHE 显式指定</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&gt; mysql&gt; select SQL_CACHE * from T where ID=10</span><br><span class="line">&gt;</span><br></pre></td></tr></table></figure>
+</blockquote>
+<p><strong>为什么不使用查询缓存，弊端在哪里？</strong></p>
+<ul>
+<li>一是 <strong>sql 语句要求严格一致，即两条sql语句完全一致，不能多空格之类也不能少</strong>。导致缓存命中率过低。</li>
+<li>二是<strong>只要有更新的操作，则该表相关的所有缓存清空</strong>。导致利用率过低，缓存操作粒度太粗。非常不实用。在实际的开发中一张<strong>表的数据更新时相当频繁</strong>，除了一些配置表。</li>
+<li>三是<strong>查询缓存的失效非常频繁，只要有对一个表的更新，这个表上所有的查询缓存都会被清空。因此很可能你费劲地把结果存起来，还没使用呢，就被一个更新全清空了。</strong></li>
+</ul>
+<blockquote>
+<hr>
+<p>​    当判断缓存是否命中时，MySQL不会进行解析查询语句，而是直接使用SQL语句和客户端发送过来的其他原始信息。<strong>所以，任何字符上的不同，例如空格、注解等都会导致缓存的不命中。</strong></p>
+<p>​    <strong>当查询语句中有一些不确定的数据时，则不会被缓存。例如包含函数NOW()或者CURRENT_DATE()的查询不会缓存。</strong>包含任何用户自定义函数，存储函数，用户变量，临时表，mysql数据库中的系统表或者包含任何列级别权限的表，都不会被缓存。(MySQL并不是会因为查询中包含一个不确定的函数而不检查查询缓存，因为检查查询缓存之前，MySQL不会解析查询语句，所以也无法知道语句中是否有不确定的函数)</p>
+<p>​    <strong>事实是，如果查询语句中包含任何的不确定的函数，那么其查询结果不会被缓存，因为查询缓存中也无法找到对应的缓存结果。</strong></p>
+<hr>
+</blockquote>
+<h5 id="分析器（知道要做什么，解析和预处理，SQL语句—-gt-语法树）"><a href="#分析器（知道要做什么，解析和预处理，SQL语句—-gt-语法树）" class="headerlink" title="分析器（知道要做什么，解析和预处理，SQL语句—&gt;语法树）"></a><strong>分析器（知道要做什么，解析和预处理，SQL语句—&gt;语法树）</strong></h5><p>如果没有命中查询缓存，就要开始真正执行语句了。</p>
+<ol>
+<li>分析器先会做“<strong>词法分析</strong>”。你输入的是由多个字符串和空格组成的一条 SQL 语句，MySQL 需要识别出里面的字符串分别是什么，代表什么。</li>
+</ol>
+<blockquote>
+<p>MySQL 从你输入的 “select” 这个关键字识别出来，这是一个查询语句。它也要把字符串“T”识别成“表名 T”，把字符串“ID”识别成“列 ID”。</p>
+</blockquote>
+<p>   2.做完了这些识别以后，就要做<strong>“语法分析”</strong>。根据词法分析的结果，语法分析器会根据语法规则，判断你输入的这个 SQL 语句是否满足 MySQL 语法。</p>
+<blockquote>
+<p>如果你的语句不对，就会收到“You have an error in your SQL syntax”的错误提醒，比如下面这个语句 select 少打了开头的字母“s”。</p>
+</blockquote>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; elect * from t where ID=1;</span><br><span class="line"></span><br><span class="line">ERROR 1064 (42000): You have an error in your SQL syntax；.......</span><br></pre></td></tr></table></figure>
+<p>其中<strong>语法分析</strong>会进行如下的步骤：</p>
+<ul>
+<li><strong>解析器通过关键字将SQL语句进行解析，并生成对应的解析树</strong>。MySQL解析器将使用MySQL语法规则验证和解析查询。</li>
+<li><strong>预处理器则根据一些MySQL规则进行进一步检查解析树是否合法</strong>，例如检查数据表和数据列是否存在，还会解析名字和别名，看看它们是否有歧义</li>
+</ul>
+<p><img src="https://i.loli.net/2019/07/02/5d1af5e8ee87251762.png" alt></p>
+<h5 id="查询优化器（知道该怎么做，语法树—-gt-执行计划）"><a href="#查询优化器（知道该怎么做，语法树—-gt-执行计划）" class="headerlink" title="查询优化器（知道该怎么做，语法树—&gt;执行计划）"></a><strong>查询优化器</strong>（知道该怎么做，语法树—&gt;执行计划）</h5><p>​    <strong>一条查询有很多种执行方式，查询优化器作用就是会按照它认为的最优的执行方案去执行</strong>，比如多个索引的时候该如何选择索引，多表查询的时候如何选择关联顺序等。</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">例如：mysql&gt; select * from t1 join t2 using(ID)  where t1.c=10 and t2.d=20;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>既可以先从表 t1 里面取出 c=10 的记录的 ID 值，再根据 ID 值关联到表 t2，再判断 t2 里面 d 的值是否等于 20.</p>
+<p>也可以先从表 t2 里面取出 d=20 的记录的 ID 值，再根据 ID 值关联到 t1，再判断 t1 里面 c 的值是否等于 10</p>
+<p>这两种执行方法的逻辑结果是一样的，<strong>但是执行的效率会有不同，而优化器的作用就是决定选择使用哪一个方案</strong></p>
+</blockquote>
+<p><strong>查询优化器如何进行选择？</strong></p>
+<blockquote>
+<p><strong>MySQL使用基于成本的查询优化器。它会尝试预测一个查询使用某种执行计划时的成本，并选择其中成本最少的一个。</strong></p>
+<ol>
+<li><strong>查询优化器会将解析树转化成执行计划，一条查询可以有多种执行方法，最后都是返回相同结果。</strong></li>
+<li>生成执行计划的过程会消耗较多的时间，特别是存在许多可选的执行计划时</li>
+<li><strong>如果在一条SQL语句执行的过程中将该语句对应的最终执行计划进行缓存，当相似的语句再次被输入服务器时，就可以直接使用已缓存的执行计划，从而跳过SQL语句生成执行计划的整个过程，进而可以提高语句的执行速度。</strong></li>
+</ol>
+</blockquote>
+<p>​    优化器会根据优化规则对关系表达式进行转换，<strong>这里的转换是说一个关系表达式经过优化规则后会生成另外一个关系表达式，同时原有表达式也会保留，经过一系列转换后会生成多个执行计划</strong>，然后CBO<strong>会根据统计信息和代价模型(Cost Model)计算每个执行计划的Cost，从中挑选Cost最小的执行计划。</strong></p>
+<h5 id="执行器"><a href="#执行器" class="headerlink" title="执行器"></a>执行器</h5><ul>
+<li>当选择了执行计划后，mysql就准备开始执行了。</li>
+<li>首先执行前会校验该用户有没有权限，如果没有权限，就会返回错误信息，如果有权限，就会去调用引擎的接口，返回接口执行的结果。</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; select * from T where ID=10;</span><br><span class="line"> </span><br><span class="line">ERROR 1142 (42000): <span class="keyword">SELECT</span> command denied <span class="keyword">to</span> <span class="keyword">user</span> <span class="string">'b'</span>@<span class="string">'localhost'</span> <span class="keyword">for</span> <span class="keyword">table</span> <span class="string">'T'</span></span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>开始执行的时候，要先判断一下你对这个表 T 有没有执行查询的权限如果没有，就会返回没有权限的错误，如下所示。</p>
+<p>如果有权限，就打开表继续执行。打开表的时候，执行器就会根据表的引擎定义，去使用这个引擎提供的接口。</p>
+<p><strong>对于没索引的表：</strong></p>
+<p>比如我们这个例子中的表 T 中，ID 字段没有索引，那么执行器的执行流程是这样的：</p>
+<ol>
+<li>调用 InnoDB 引擎接口取这个表的第一行，判断 ID 值是不是 10，如果不是则跳过，如果是则将这行存在结果集中；</li>
+<li>调用引擎接口取“下一行”，重复相同的判断逻辑，直到取到这个表的最后一行。</li>
+<li>执行器将上述遍历过程中所有满足条件的行组成的记录集作为结果集返回给客户端。</li>
+</ol>
+<p>至此，这个语句就执行完成了。</p>
+<p><strong>对于有索引的表：</strong></p>
+<p>第一次调用的是“取满足条件的第一行”这个接 口，之后循环取“满足条件的下一行”这个接口，这些接口都是引擎中已经定义好的。</p>
+<p>你会在数据库的慢查询日志中看到一个 <strong>rows_examined 的字段，表示这个语句执行过程 中扫描了多少行。这个值就是在执行器每次调用引擎获取数据行的时候累加的</strong></p>
+<p>在有些场景下，<strong>执行器调用一次，在引擎内部则扫描了多行，因此引擎扫描行数跟 rows_examined 并不是完全相同的</strong></p>
+</blockquote>
+<h5 id="结果返回客户端"><a href="#结果返回客户端" class="headerlink" title="结果返回客户端"></a>结果返回客户端</h5><p>​    如果查询可以被缓存，那么MySQL在这个阶段页会将结果存放到查询缓存中。MySQL将结果集返回给客户端是一个增量、逐步返回的过程。在查询生成第一条结果时，MySQL就可以开始向客户端逐步返回结果集了<strong>（这里多说一点就是Mysql客户端和服务器端之间的通信是“半双工”，意味着没法进行流量控制，一般服务器响应给用户的数据很多，由多个数据包组成，客户必须完整地接受整个的结果，这时候可以在查询的时候加上limit提高效率）</strong></p>
+<h3 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h3><p>极客时间——《Mysql实战45讲》林晓斌</p>
+<p><a href="https://www.infoq.cn/article/PKzT75BPcryCYJ_VuWrR" target="_blank" rel="noopener">https://www.infoq.cn/article/PKzT75BPcryCYJ_VuWrR</a></p>
+<p><a href="https://www.designcise.com/web/tutorial/what-is-the-order-of-execution-of-an-sql-query" target="_blank" rel="noopener">https://www.designcise.com/web/tutorial/what-is-the-order-of-execution-of-an-sql-query</a></p>
+<p><a href="https://dbaplus.cn/news-155-1531-1.html" target="_blank" rel="noopener">https://dbaplus.cn/news-155-1531-1.html</a></p>
+<p><a href="https://www.cnblogs.com/cdf-opensource-007/p/6502556.html" target="_blank" rel="noopener">https://www.cnblogs.com/cdf-opensource-007/p/6502556.html</a></p>
+</the></excerpt>
+      
+      
+    </div>
+    
+  </div>
+  
+    
+    <div class="copyright">
+        <p><span>本文标题:</span><a href="/2019/05/18/一条SQL语句的执行流程(一)/">SQL语句的执行流程</a></p>
+        <p><span>文章作者:</span><a href="/" title="访问 Whits 的个人博客">Whits</a></p>
+        <p><span>发布时间:</span>2019年05月18日 - 17时33分</p>
+        <p><span>最后更新:</span>2019年07月02日 - 16时52分</p>
+        <p>
+            <span>原始链接:</span><a class="post-url" href="/2019/05/18/一条SQL语句的执行流程(一)/" title="SQL语句的执行流程">http://yoursite.com/2019/05/18/一条SQL语句的执行流程(一)/</a>
+            <span class="copy-path" data-clipboard-text="原文: http://yoursite.com/2019/05/18/一条SQL语句的执行流程(一)/　　作者: Whits" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <script src="/js/clipboard.min.js"></script>
+            <script> var clipboard = new Clipboard('.copy-path'); </script>
+        </p>
+        <p>
+            <span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/3.0/cn/" title="中国大陆 (CC BY-NC-SA 3.0 CN)" target="_blank">"署名-非商用-相同方式共享 3.0"</a> 转载请保留原文链接及作者。
+        </p>
+    </div>
+
+
+
+<nav id="article-nav">
+  
+    <a href="/2019/06/09/Mysql技术内幕-事务(一)/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption"><</strong>
+      <div class="article-nav-title">
+        
+          Mysql中的事务（一）
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2019/04/26/Mysql技术内幕-索引(二)/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">Mysql之InnoDB的索引（二）</div>
+      <strong class="article-nav-caption">></strong>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+    <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#Mysql的简要架构"><span class="toc-number">1.</span> <span class="toc-text">Mysql的简要架构</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Server层："><span class="toc-number">1.1.</span> <span class="toc-text">Server层：</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#连接器组件"><span class="toc-number">1.1.1.</span> <span class="toc-text">连接器组件</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#查询缓存-Mysql-8-0-已经去除这个模块"><span class="toc-number">1.1.2.</span> <span class="toc-text">查询缓存(Mysql 8.0 已经去除这个模块)</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#分析器（知道要做什么，解析和预处理，SQL语句—-gt-语法树）"><span class="toc-number">1.1.3.</span> <span class="toc-text">分析器（知道要做什么，解析和预处理，SQL语句—&gt;语法树）</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#查询优化器（知道该怎么做，语法树—-gt-执行计划）"><span class="toc-number">1.1.4.</span> <span class="toc-text">查询优化器（知道该怎么做，语法树—&gt;执行计划）</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#执行器"><span class="toc-number">1.1.5.</span> <span class="toc-text">执行器</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#结果返回客户端"><span class="toc-number">1.1.6.</span> <span class="toc-text">结果返回客户端</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#参考资料"><span class="toc-number">2.</span> <span class="toc-text">参考资料</span></a></li></ol>
+</div>
+<input type="button" id="tocButton" value="隐藏目录" title="点击按钮隐藏或者显示文章目录">
+
+<script src="https://7.url.cn/edu/jslib/comb/require-2.1.6,jquery-1.9.1.min.js"></script>
+<script>
+    var valueHide = "隐藏目录";
+    var valueShow = "显示目录";
+
+    if ($(".left-col").is(":hidden")) {
+        $("#tocButton").attr("value", valueShow);
+    }
+    $("#tocButton").click(function() {
+        if ($("#toc").is(":hidden")) {
+            $("#tocButton").attr("value", valueHide);
+            $("#toc").slideDown(320);
+        }
+        else {
+            $("#tocButton").attr("value", valueShow);
+            $("#toc").slideUp(350);
+        }
+    })
+    if ($(".toc").length < 1) {
+        $("#toc, #tocButton").hide();
+    }
+</script>
+
+
+
+
+
+<div class="bdsharebuttonbox">
+	<a href="#" class="fx fa-weibo bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+	<a href="#" class="fx fa-weixin bds_weixin" data-cmd="weixin" title="分享到微信"></a>
+	<a href="#" class="fx fa-qq bds_sqq" data-cmd="sqq" title="分享到QQ好友"></a>
+	<a href="#" class="fx fa-facebook-official bds_fbook" data-cmd="fbook" title="分享到Facebook"></a>
+	<a href="#" class="fx fa-twitter bds_twi" data-cmd="twi" title="分享到Twitter"></a>
+	<a href="#" class="fx fa-linkedin bds_linkedin" data-cmd="linkedin" title="分享到linkedin"></a>
+	<a href="#" class="fx fa-files-o bds_copy" data-cmd="copy" title="分享到复制网址"></a>
+</div>
+<script>window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"2","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];</script>
+
+
+
+
+    
+
+
+
+    <div class="scroll" id="post-nav-button">
+        
+            <a href="/2019/06/09/Mysql技术内幕-事务(一)/" title="上一篇: Mysql中的事务（一）">
+                <i class="fa fa-angle-left"></i>
+            </a>
+        
+        <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
+        
+            <a href="/2019/04/26/Mysql技术内幕-索引(二)/" title="下一篇: Mysql之InnoDB的索引（二）">
+                <i class="fa fa-angle-right"></i>
+            </a>
+        
+    </div>
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019/07/02/一条SQL语句的执行流程(二)/">一条SQL语句的执行流程(二)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/06/09/Mysql技术内幕-事务(一)/">Mysql中的事务（一）</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/18/一条SQL语句的执行流程(一)/">SQL语句的执行流程</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/26/Mysql技术内幕-索引(二)/">Mysql之InnoDB的索引（二）</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/23/Mysql技术内幕-索引(一)/">Mysql之InnoDB的索引（一）</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/17/Java运行期优化(二)/">Java晚期(运行期)优化(二)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/14/Java运行期优化(一)/">Java晚期(运行期)优化(一)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/06/Java编译期优化/">Java早期(编译期)优化</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/15/Object源码剖析/">Object源码剖析（顺带分析了notify/wait）</a></li></ul>
+    <script src="https://7.url.cn/edu/jslib/comb/require-2.1.6,jquery-1.9.1.min.js"></script>
+    <script>
+        $(".post-list").addClass("toc-article");
+        $(".post-list-item a").attr("target","_blank");
+        $("#post-nav-button > a:nth-child(2)").click(function() {
+            $(".fa-bars, .fa-times").toggle();
+            $(".post-list").toggle(300);
+            if ($(".toc").length > 0) {
+                $("#toc, #tocButton").toggle(200, function() {
+                    if ($(".switch-area").is(":visible")) {
+                        $("#tocButton").attr("value", valueHide);
+                        }
+                    })
+            }
+            else {
+            }
+        })
+    </script>
+
+
+
+    <script>
+        
+    </script>
+</div>
+      <footer id="footer">
+    <div class="outer">
+        <div id="footer-info">
+            <div class="footer-left">
+                &copy; 2019 Whits
+            </div>
+            <div class="footer-right">
+                <a href="http://hexo.io/" target="_blank">Hexo</a>  Theme <a href="https://github.com/luuman/hexo-theme-spfk" target="_blank">spfk</a> by luuman
+            </div>
+        </div>
+        
+            <div class="visit">
+                
+                    <span id="busuanzi_container_site_pv" style="display:none">
+                        <span id="site-visit">到访数: 
+                            <span id="busuanzi_value_site_uv"></span>
+                        </span>
+                    </span>
+                
+                
+                    <span>, </span>
+                
+                
+                    <span id="busuanzi_container_page_pv" style="display:none">
+                        <span id="page-visit">本页阅读量: 
+                            <span id="busuanzi_value_page_pv"></span>
+                        </span>
+                    </span>
+                
+            </div>
+        
+    </div>
+</footer>
+
+    </div>
+    <script src="https://7.url.cn/edu/jslib/comb/require-2.1.6,jquery-1.9.1.min.js"></script>
+<script src="/js/main.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            var backgroundnum = 24;
+            var backgroundimg = "url(/background/bg-x.jpg)".replace(/x/gi, Math.ceil(Math.random() * backgroundnum));
+            $("#mobile-nav").css({"background-image": backgroundimg,"background-size": "cover","background-position": "center"});
+            $(".left-col").css({"background-image": backgroundimg,"background-size": "cover","background-position": "center"});
+        })
+    </script>
+
+
+
+
+
+<div class="scroll" id="scroll">
+    <a href="#"><i class="fa fa-arrow-up"></i></a>
+    <a href="#comments"><i class="fa fa-comments-o"></i></a>
+    <a href="#footer"><i class="fa fa-arrow-down"></i></a>
+</div>
+<script>
+    $(document).ready(function() {
+        if ($("#comments").length < 1) {
+            $("#scroll > a:nth-child(2)").hide();
+        };
+    })
+</script>
+
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+
+  <script language="javascript">
+    $(function() {
+        $("a[title]").each(function() {
+            var a = $(this);
+            var title = a.attr('title');
+            if (title == undefined || title == "") return;
+            a.data('title', title).removeAttr('title').hover(
+
+            function() {
+                var offset = a.offset();
+                $("<div id=\"anchortitlecontainer\"></div>").appendTo($("body")).html(title).css({
+                    top: offset.top - a.outerHeight() - 15,
+                    left: offset.left + a.outerWidth()/2 + 1
+                }).fadeIn(function() {
+                    var pop = $(this);
+                    setTimeout(function() {
+                        pop.remove();
+                    }, pop.text().length * 800);
+                });
+            }, function() {
+                $("#anchortitlecontainer").remove();
+            });
+        });
+    });
+</script>
+
+
+  </div>
+</body>
+</html>
